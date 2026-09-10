@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarah's Resume Parser & Candidate Matcher</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-header {
+            background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- Navbar / Header -->
+    <header class="gradient-header text-white py-8 px-4 sm:px-8 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-file-invoice"></i> AI Resume Parser & Search Engine
+                </h1>
+                <p class="text-blue-100 mt-2 text-sm sm:text-base">
+                    Transforming Sarah's hiring workflow — Structured PDF Parsing, Skill Extraction & Candidate Ranking
+                </p>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+                <i class="fa-solid fa-database text-blue-200 text-xl"></i>
+                <div>
+                    <span class="text-xs uppercase text-blue-200 block font-semibold">Indexed Resumes</span>
+                    <span id="indexedCount" class="text-xl font-bold text-white">{{ candidate_count }} Profiles</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <!-- Sidebar / Filter Controls -->
+        <aside class="lg:col-span-1 space-y-6">
+            
+            <!-- Upload Box -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i> Upload Resumes
+                </h2>
+                <div id="dropZone" class="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-6 text-center bg-blue-50/50 cursor-pointer transition">
+                    <i class="fa-solid fa-file-pdf text-3xl text-blue-500 mb-2 block"></i>
+                    <p class="text-xs text-gray-600 font-medium">Drag & Drop PDF Resumes here or click to browse</p>
+                    <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                </div>
+                <div id="uploadStatus" class="mt-3 text-xs font-semibold text-gray-600"></div>
+            </div>
+
+            <!-- Filters Box -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-600"></i> Filter Candidates
+                </h2>
+                
+                <!-- Min Experience -->
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Minimum Experience</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="expSlider" min="0" max="10" step="0.5" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <span id="expVal" class="text-sm font-bold text-blue-600 w-12 text-right">0 Yrs</span>
+                    </div>
+                </div>
+
+                <!-- Degree Selector -->
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Education Level</label>
+                    <select id="degreeSelect" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Any">Any Degree</option>
+                        <option value="Bachelor's">Bachelor's Degree+</option>
+                        <option value="Master's">Master's Degree+</option>
+                        <option value="PhD">PhD Degree</option>
+                    </select>
+                </div>
+
+                <button id="resetFiltersBtn" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset Filters
+                </button>
+            </div>
+
+        </aside>
+
+        <!-- Main Search & Results Area -->
+        <section class="lg:col-span-3 space-y-6">
+
+            <!-- Natural Query Search Bar -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Natural Language Search Query</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="text" id="queryInput" value="Python developers with 3+ years experience" placeholder="e.g. Senior DevOps engineer with AWS & Kubernetes..." class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium">
+                    </div>
+                    <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-md">
+                        <i class="fa-solid fa-paper-plane"></i> Search Candidates
+                    </button>
+                </div>
+
+                <!-- Quick Query Chips -->
+                <div class="mt-4 flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 mr-1">Quick Search:</span>
+                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Python developers with 3+ years experience">
+                        🐍 Python Devs (3+ yrs)
+                    </button>
+                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="DevOps engineer AWS Kubernetes Terraform">
+                        ☁️ DevOps & AWS
+                    </button>
+                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Data Scientist PyTorch PhD">
+                        🤖 Data Science PhD
+                    </button>
+                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Frontend React developer">
+                        💻 Full-Stack React
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results List Header -->
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star text-yellow-500"></i> Ranked Results
+                </h3>
+                <span id="resultsCount" class="text-xs font-bold text-gray-500 uppercase bg-gray-200 px-3 py-1 rounded-full">0 Candidates</span>
+            </div>
+
+            <!-- Candidates Container -->
+            <div id="resultsContainer" class="space-y-4">
+                <!-- Dynamic cards populated via JavaScript -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Candidate Detail Modal -->
+    <div id="candidateModal" class="fixed inset-0 bg-black/50 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">
+                &times;
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const queryInput = document.getElementById('queryInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const expSlider = document.getElementById('expSlider');
+        const expVal = document.getElementById('expVal');
+        const degreeSelect = document.getElementById('degreeSelect');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        expSlider.addEventListener('input', (e) => {
+            expVal.textContent = `${e.target.value} Yrs`;
+            performSearch();
+        });
+
+        degreeSelect.addEventListener('change', performSearch);
+        searchBtn.addEventListener('click', performSearch);
+        queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+        document.querySelectorAll('.chip-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                queryInput.value = btn.getAttribute('data-query');
+                performSearch();
+            });
+        });
+
+        resetFiltersBtn.addEventListener('click', () => {
+            queryInput.value = '';
+            expSlider.value = 0;
+            expVal.textContent = '0 Yrs';
+            degreeSelect.value = 'Any';
+            performSearch();
+        });
+
+        // Drag & Drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) uploadFile(e.target.files[0]);
+        });
+
+        async function uploadFile(file) {
+            uploadStatus.textContent = 'Uploading & parsing resume...';
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    uploadStatus.textContent = `✓ Uploaded & indexed ${data.candidate.name}`;
+                    document.getElementById('indexedCount').textContent = `${data.total} Profiles`;
+                    performSearch();
+                } else {
+                    uploadStatus.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                uploadStatus.textContent = '❌ Upload failed.';
+            }
+        }
+
+        async function performSearch() {
+            resultsContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-blue-600 block"></i> Ranking candidates...</div>';
+
+            try {
+                const res = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: queryInput.value,
+                        min_exp: parseFloat(expSlider.value),
+                        min_degree: degreeSelect.value
+                    })
+                });
+
+                const data = await res.json();
+                renderResults(data.results || []);
+            } catch (err) {
+                resultsContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to fetch search results.</div>';
+            }
+        }
+
+        function renderResults(results) {
+            resultsCount.textContent = `${results.length} Candidates`;
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="bg-white p-8 rounded-xl text-center text-gray-500 font-medium border border-gray-200">No candidates match your current search filters.</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map((item, idx) => {
+                const c = item.candidate;
+                const score = item.suitability_score;
+                
+                let badgeBg = score >= 80 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 
+                              score >= 60 ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-red-100 text-red-800 border-red-300';
+
+                const skillsBadges = (c.skills || []).map(s => `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-gray-200 mr-1.5 mb-1.5 inline-block">${s}</span>`).join('');
+
+                return `
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm card-hover transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="space-y-2 flex-1">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-gray-900 text-white font-bold text-xs px-2.5 py-1 rounded-lg">#${idx + 1}</span>
+                                <h4 class="text-lg font-extrabold text-gray-900">${c.name}</h4>
+                                <span class="text-xs font-semibold text-gray-500 italic">— ${c.title}</span>
+                            </div>
+                            <div class="text-xs text-gray-600 flex flex-wrap gap-4 font-medium">
+                                <span><i class="fa-regular fa-envelope text-blue-500 mr-1"></i>${c.contact.email}</span>
+                                <span><i class="fa-solid fa-phone text-blue-500 mr-1"></i>${c.contact.phone}</span>
+                                <span><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>${c.contact.location}</span>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-700 pt-1">
+                                <span class="mr-4">⚡ <b>Exp:</b> ${c.experience_years} Years</span>
+                                <span>🎓 <b>Degree:</b> ${c.highest_degree}</span>
+                            </div>
+                            <div class="pt-2 flex flex-wrap items-center">
+                                ${skillsBadges}
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center md:items-end justify-between self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
+                            <span class="text-lg font-black px-4 py-1.5 rounded-full border ${badgeBg} shadow-sm">
+                                ${score}% Match
+                            </span>
+                            <button onclick="viewDetails(${idx})" class="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                                View Full Profile <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            window.currentSearchData = results;
+        }
+
+        function viewDetails(idx) {
+            const item = window.currentSearchData[idx];
+            const c = item.candidate;
+            const det = item.match_details;
+
+            document.getElementById('modalContent').innerHTML = `
+                <h3 class="text-2xl font-extrabold text-gray-900 mb-1">${c.name}</h3>
+                <p class="text-sm font-semibold text-blue-600 mb-4">${c.title}</p>
+                <hr class="mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium mb-6">
+                    <div><b>Email:</b> ${c.contact.email}</div>
+                    <div><b>Phone:</b> ${c.contact.phone}</div>
+                    <div><b>Location:</b> ${c.contact.location}</div>
+                    <div><b>Experience:</b> ${c.experience_years} Years</div>
+                    <div><b>Highest Degree:</b> ${c.highest_degree}</div>
+                    <div><b>Suitability Score:</b> ${item.suitability_score}%</div>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900 mb-2">Parsed Skills</h4>
+                <div class="mb-6">${c.skills.map(s => `<span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded mr-1.5 mb-1 inline-block border border-blue-200">${s}</span>`).join('')}</div>
+                <h4 class="text-sm font-bold text-gray-900 mb-2">Raw Resume Text</h4>
+                <pre class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs max-h-60 overflow-y-auto whitespace-pre-wrap font-mono">${c.raw_text}</pre>
+            `;
+
+            document.getElementById('candidateModal').classList.remove('hidden');
+        }
+
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            document.getElementById('candidateModal').classList.add('hidden');
+        });
+
+        // Run initial search
+        performSearch();
+    </script>
+</body>
+</html>
