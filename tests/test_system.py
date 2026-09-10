@@ -70,5 +70,24 @@ class TestResumeParserSystem(unittest.TestCase):
         self.assertIn("Marcus Johnson", top_candidate["name"])
         self.assertEqual(top_candidate["highest_degree"], "PhD")
 
+    def test_jd_matcher_and_skill_gaps(self):
+        search_engine = IntelligentSearchEngine(self.parsed_candidates)
+        jd_text = "We need a Senior Python Engineer with 3+ years experience in FastAPI, Docker, and AWS."
+        match_data = search_engine.match_job_description(jd_text)
+        
+        self.assertIn("skills", match_data["jd_requirements"])
+        self.assertIn("Python", match_data["jd_requirements"]["skills"])
+        self.assertGreater(len(match_data["results"]), 0)
+        
+        top_res = match_data["results"][0]
+        self.assertIn("outreach_draft", top_res)
+        self.assertIn("matched_skills", top_res["match_details"])
+        self.assertIn("missing_skills", top_res["match_details"])
+
+    def test_anonymous_id_generation(self):
+        for candidate in self.parsed_candidates:
+            self.assertIn("anonymous_id", candidate)
+            self.assertTrue(candidate["anonymous_id"].startswith("CAND-"))
+
 if __name__ == '__main__':
     unittest.main()

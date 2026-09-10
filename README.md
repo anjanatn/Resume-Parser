@@ -199,6 +199,27 @@ Fetch and parse a PDF resume directly from a web document link or cloud URL (Goo
 }
 ```
 
+### `POST /api/match_jd`
+Parses a full Job Description, extracts required skills, experience, and education, and ranks all candidates with a detailed skill gap analysis.
+
+**Request Body (JSON):**
+```json
+{
+  "jd_text": "Looking for a Senior Python Backend Developer with 3+ years experience in FastAPI, Docker, and AWS..."
+}
+```
+
+### `POST /api/update_status`
+Updates a candidate's pipeline status (`New`, `Shortlisted`, `Interview Scheduled`, `Archived`).
+
+**Request Body (JSON):**
+```json
+{
+  "id": "resume_01_alex_chen",
+  "status": "Shortlisted"
+}
+```
+
 ### `GET /api/candidates`
 Returns all indexed candidate profiles.
 
@@ -210,12 +231,34 @@ Returns all indexed candidate profiles.
 |---|---|---|
 | Skill Match | 40% | Fraction of required skills found in candidate profile |
 | Experience Match | 30% | Years of experience vs. required minimum |
-| Semantic Relevance | 20% | TF-IDF cosine similarity between query and resume text |
+| Semantic Relevance | 20% | TF-IDF cosine similarity between query/JD and resume text |
 | Education Level | 10% | Degree level vs. required minimum |
 
 ```
 score = (skill_match * 0.40) + (exp_match * 0.30) + (tfidf_similarity * 0.20) + (edu_match * 0.10)
 ```
+
+---
+
+## Advanced AI Technologies in HR & Document Intelligence (2026)
+
+This system is designed with modern AI principles and can be extended with the latest production AI technologies:
+
+1. **RAG & Dense Vector Embeddings:**
+   - Instead of sparse TF-IDF, dense vector embeddings (e.g., `text-embedding-3`, Gemini embeddings, BGE) capture deep semantic meaning (e.g., mapping "K8s" to "Kubernetes" or "GCP" to "Cloud infrastructure").
+   - Vector databases like Chroma, Pinecone, or FAISS enable instant semantic search across millions of candidate resumes.
+
+2. **LLM Structured Extraction (Zero-Shot JSON Schema):**
+   - Modern LLMs (Gemini 2.0 Flash, GPT-4o-mini) can extract deeply nested structured JSON conforming to strict schemas without brittle regex rules.
+
+3. **Multimodal Document AI:**
+   - Multimodal LLMs and models like LayoutLMv3 process 2-column visual resumes, infographics, and graphical portfolios directly without losing spatial context during raw text flattening.
+
+4. **Cross-Encoder Re-Ranking:**
+   - Two-stage retrieval pipelines retrieve candidates via fast vector search (Bi-Encoder), followed by a Cross-Encoder Re-Ranker (e.g., Cohere Rerank, BGE-Reranker) for high precision ranking.
+
+5. **Agentic Recruiter Workflows:**
+   - Autonomous AI agents conduct automated skill gap assessments, generate tailored technical screening questions, and draft contextual outreach emails.
 
 ---
 
@@ -255,7 +298,7 @@ score = (skill_match * 0.40) + (exp_match * 0.30) + (tfidf_similarity * 0.20) + 
 python -m unittest tests/test_system.py -v
 ```
 
-All 5 tests cover: parsing accuracy, field extraction, Python search ranking, DevOps ranking, and PhD Data Science ranking.
+All 7 unit tests cover: parsing accuracy, field extraction, Python search ranking, DevOps ranking, PhD Data Science ranking, Job Description matching, and Blind Screening anonymous IDs.
 
 ---
 
@@ -267,6 +310,7 @@ reportlab>=4.0.0
 pymupdf>=1.23.0
 pypdf>=3.17.0
 scikit-learn>=1.3.0
+python-docx>=1.1.0
 ```
 
 Note: `streamlit` and `pandas` are needed only for `app.py` (Streamlit UI), not for Flask/Vercel deployment.

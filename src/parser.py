@@ -12,6 +12,46 @@ class ResumeParser:
     def __init__(self):
         self.skills_taxonomy = SKILLS_TAXONOMY
 
+    def extract_text(self, file_path_or_stream, filename="document.pdf"):
+        """Extract text from PDF, DOCX, or TXT file path or stream."""
+        ext = os.path.splitext(filename)[1].lower() if filename else ".pdf"
+
+        # 1. Plain text files
+        if ext in [".txt", ".text"]:
+            try:
+                if isinstance(file_path_or_stream, str):
+                    with open(file_path_or_stream, "r", encoding="utf-8", errors="ignore") as f:
+                        return clean_text(f.read())
+                else:
+                    content = file_path_or_stream.read()
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8", errors="ignore")
+                    file_path_or_stream.seek(0)
+                    return clean_text(content)
+            except Exception as e:
+                print(f"Error reading TXT: {e}")
+
+        # 2. Word documents (.docx)
+        if ext in [".docx", ".doc"]:
+            try:
+                import docx
+                doc = docx.Document(file_path_or_stream)
+                full_text = []
+                for para in doc.paragraphs:
+                    if para.text.strip():
+                        full_text.append(para.text)
+                for table in doc.tables:
+                    for row in table.rows:
+                        row_text = " | ".join([cell.text.strip() for cell in row.cells if cell.text.strip()])
+                        if row_text:
+                            full_text.append(row_text)
+                return clean_text("\n".join(full_text))
+            except Exception as e:
+                print(f"Error reading DOCX: {e}")
+
+        # 3. PDF fallback extraction
+        return self.extract_text_from_pdf(file_path_or_stream)
+
     def extract_text_from_pdf(self, pdf_path_or_stream):
         """Extract text from PDF file path or stream using PyMuPDF with pypdf fallback."""
         raw_text = ""
@@ -36,9 +76,9 @@ class ResumeParser:
         
         return clean_text(raw_text)
 
-    def parse(self, pdf_path_or_stream, filename="Resume"):
+    def parse(self, file_path_or_stream, filename="Resume.pdf"):
         """Main parsing method returning a structured candidate profile dict."""
-        raw_text = self.extract_text_from_pdf(pdf_path_or_stream)
+        raw_text = self.extract_text(file_path_or_stream, filename=filename)
         lines = [line.strip() for line in raw_text.split('\n') if line.strip()]
 
         name = self._extract_name(lines, filename)
@@ -48,8 +88,19 @@ class ResumeParser:
         education_info = self._extract_education(raw_text)
         exp_years, work_history = self._extract_experience(raw_text)
 
+        cand_id = os.path.splitext(os.path.basename(filename))[0]
+        # Deterministic short anonymized ID for blind screening
+        import hashlib
+        short_hash = hashlib.md5(cand_id.encode('utf-8')).hexdigest()[:4].upper()
+        anonymous_id = f"CAND-{short_hash}"
+
+        # Generate concise recruiter pitch
+        top_skills_str = ", ".join(skills[:4]) if skills else "Core software engineering"
+        summary_pitch = f"{title} with {exp_years} yrs experience ({top_skills_str}) and {education_info['highest_degree']} degree."
+
         return {
-            "id": os.path.splitext(os.path.basename(filename))[0],
+            "id": cand_id,
+            "anonymous_id": anonymous_id,
             "filename": filename,
             "name": name,
             "title": title,
@@ -59,7 +110,9 @@ class ResumeParser:
             "highest_degree": education_info["highest_degree"],
             "education": education_info["degrees"],
             "work_history": work_history,
-            "raw_text": raw_text
+            "raw_text": raw_text,
+            "summary_pitch": summary_pitch,
+            "status": "New"
         }
 
     def _extract_name(self, lines, filename):

@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sarah's Resume Parser & Candidate Matcher</title>
+    <title>AI Resume Parser & Intelligent Search Engine</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .gradient-header {
-            background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+            background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
         }
         .card-hover:hover {
             transform: translateY(-2px);
@@ -20,94 +20,121 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
 
-    <!-- Navbar / Header -->
-    <header class="gradient-header text-white py-8 px-4 sm:px-8 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
+    <!-- Header -->
+    <header class="gradient-header text-white py-6 px-4 sm:px-8 shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight flex items-center gap-3">
-                    <i class="fa-solid fa-file-invoice"></i> AI Resume Parser & Search Engine
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-file-invoice"></i> AI Resume Parser &amp; Search Engine
                 </h1>
-                <p class="text-blue-100 mt-2 text-sm sm:text-base">
-                    Automated PDF Parsing, Skill Extraction &amp; Intelligent Candidate Ranking
+                <p class="text-blue-100 text-xs sm:text-sm mt-1">
+                    Automated Multi-Format Parsing, Job Description Matching &amp; Blind Screening
                 </p>
             </div>
-            <div class="mt-4 md:mt-0 flex items-center gap-3 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
-                <i class="fa-solid fa-database text-blue-200 text-xl"></i>
-                <div>
-                    <span class="text-xs uppercase text-blue-200 block font-semibold">Indexed Resumes</span>
-                    <span id="indexedCount" class="text-xl font-bold text-white">{{ candidate_count }} Profiles</span>
+
+            <!-- Controls: Blind Screening & Compare -->
+            <div class="flex items-center flex-wrap gap-3">
+                <!-- Blind Screening Toggle -->
+                <label class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm border border-white/20 cursor-pointer select-none text-xs font-semibold">
+                    <input type="checkbox" id="blindScreeningToggle" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-500">
+                    <span><i class="fa-solid fa-user-secret mr-1"></i> Blind Screening Mode</span>
+                </label>
+
+                <!-- Compare Selected Button -->
+                <button id="compareBtn" onclick="openComparisonModal()" disabled
+                    class="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-code-compare"></i> Compare (<span id="compareCount">0</span>/3)
+                </button>
+
+                <!-- Indexed Count Badge -->
+                <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm border border-white/20 text-xs">
+                    <i class="fa-solid fa-database text-blue-200"></i>
+                    <span id="indexedCount" class="font-bold text-white">{{ candidate_count }} Profiles</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- Main Workspace Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
 
         <!-- Sidebar / Filter Controls -->
         <aside class="lg:col-span-1 space-y-6">
-            
-            <!-- Upload Box -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i> Upload Resumes
+
+            <!-- Upload Box (PDF, DOCX, TXT, Cloud Link) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <h2 class="text-sm font-bold text-gray-900 mb-3 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up text-blue-600"></i> Ingest Resumes</span>
+                    <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">PDF, DOCX, TXT</span>
                 </h2>
 
                 <!-- Tab switcher -->
-                <div class="flex rounded-lg overflow-hidden border border-gray-200 mb-4 text-xs font-semibold">
+                <div class="flex rounded-lg overflow-hidden border border-gray-200 mb-3 text-xs font-semibold">
                     <button id="tabFile" onclick="switchUploadTab('file')"
-                        class="flex-1 py-2 bg-blue-600 text-white transition">
-                        Upload File
+                        class="flex-1 py-1.5 bg-blue-600 text-white transition text-center">
+                        File
                     </button>
                     <button id="tabUrl" onclick="switchUploadTab('url')"
-                        class="flex-1 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
-                        Paste Link
+                        class="flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center">
+                        Document Link
                     </button>
                 </div>
 
                 <!-- File drop zone -->
                 <div id="panelFile">
-                    <div id="dropZone" class="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-6 text-center bg-blue-50/50 cursor-pointer transition">
-                        <i class="fa-solid fa-file-pdf text-3xl text-blue-500 mb-2 block"></i>
-                        <p class="text-xs text-gray-600 font-medium">Drag &amp; Drop PDF resume here or click to browse</p>
-                        <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                    <div id="dropZone" class="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-5 text-center bg-blue-50/40 cursor-pointer transition">
+                        <i class="fa-solid fa-file-arrow-up text-2xl text-blue-500 mb-2 block"></i>
+                        <p class="text-xs text-gray-600 font-medium">Click or drag &amp; drop PDF/DOCX/TXT resume</p>
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="hidden">
                     </div>
                 </div>
 
                 <!-- URL paste panel -->
                 <div id="panelUrl" class="hidden">
-                    <p class="text-xs text-gray-500 mb-2">Paste a direct link to a publicly accessible PDF resume:</p>
+                    <p class="text-[11px] text-gray-500 mb-2">Google Drive, Dropbox, or direct PDF link:</p>
                     <input type="url" id="urlInput"
-                        placeholder="https://example.com/resume.pdf"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-3" />
+                        placeholder="https://drive.google.com/file/d/..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-2" />
                     <button id="fetchUrlBtn"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-link"></i> Fetch &amp; Parse Resume
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-link"></i> Fetch &amp; Index
                     </button>
                 </div>
 
-                <div id="uploadStatus" class="mt-3 text-xs font-semibold text-gray-600"></div>
+                <div id="uploadStatus" class="mt-2 text-xs font-medium text-gray-600"></div>
             </div>
 
             <!-- Filters Box -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-600"></i> Filter Candidates
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <h2 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-600"></i> Faceted Candidate Filters
                 </h2>
-                
+
+                <!-- Status Filter -->
+                <div class="mb-4">
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Recruiter Pipeline Status</label>
+                    <select id="statusFilter" onchange="filterResultsByPipeline()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="All">All Pipeline Stages</option>
+                        <option value="New">New</option>
+                        <option value="Shortlisted">Shortlisted</option>
+                        <option value="Interview Scheduled">Interview Scheduled</option>
+                        <option value="Archived">Archived</option>
+                    </select>
+                </div>
+
                 <!-- Min Experience -->
-                <div class="mb-5">
-                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Minimum Experience</label>
+                <div class="mb-4">
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Minimum Experience</label>
                     <div class="flex items-center gap-3">
-                        <input type="range" id="expSlider" min="0" max="10" step="0.5" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                        <span id="expVal" class="text-sm font-bold text-blue-600 w-12 text-right">0 Yrs</span>
+                        <input type="range" id="expSlider" min="0" max="10" step="0.5" value="0" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <span id="expVal" class="text-xs font-bold text-blue-600 w-12 text-right">0 Yrs</span>
                     </div>
                 </div>
 
                 <!-- Degree Selector -->
-                <div class="mb-5">
-                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Education Level</label>
-                    <select id="degreeSelect" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                <div class="mb-4">
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Minimum Education</label>
+                    <select id="degreeSelect" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="Any">Any Degree</option>
                         <option value="Bachelor's">Bachelor's Degree+</option>
                         <option value="Master's">Master's Degree+</option>
@@ -115,57 +142,116 @@
                     </select>
                 </div>
 
-                <button id="resetFiltersBtn" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg text-xs transition">
-                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset Filters
+                <button id="resetFiltersBtn" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> Reset All Filters
                 </button>
+            </div>
+
+            <!-- Export Card -->
+            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-xs">
+                <h3 class="font-bold text-blue-900 mb-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-export text-blue-600"></i> Recruiter Export
+                </h3>
+                <p class="text-gray-600 mb-3 text-[11px]">Download candidate roster or shortlisted applicants for HR reviews.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="exportData('csv')" class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1.5 px-2 rounded-lg border border-gray-300 text-center transition">
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i> CSV Table
+                    </button>
+                    <button onclick="exportData('json')" class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1.5 px-2 rounded-lg border border-gray-300 text-center transition">
+                        <i class="fa-solid fa-code text-blue-600"></i> JSON Roster
+                    </button>
+                </div>
             </div>
 
         </aside>
 
-        <!-- Main Search & Results Area -->
-        <section class="lg:col-span-3 space-y-6">
+        <!-- Main Search, JD Matcher & Results Area -->
+        <section class="lg:col-span-3 space-y-5">
 
-            <!-- Natural Query Search Bar -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Natural Language Search Query</label>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="relative flex-1">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
-                        <input type="text" id="queryInput" value="Python developers with 3+ years experience" placeholder="e.g. Senior DevOps engineer with AWS & Kubernetes..." class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium">
+            <!-- Primary Mode Tabs -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="flex border-b border-gray-200 text-sm font-semibold">
+                    <button id="modeTabSearch" onclick="switchMode('search')"
+                        class="flex-1 py-3 px-4 text-center border-b-2 border-blue-600 text-blue-700 font-bold flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-magnifying-glass"></i> Natural Language Search
+                    </button>
+                    <button id="modeTabJD" onclick="switchMode('jd')"
+                        class="flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-briefcase"></i> Job Description (JD) Auto-Matcher
+                    </button>
+                </div>
+
+                <!-- Panel 1: Natural Search -->
+                <div id="panelSearch" class="p-5">
+                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1.5">Enter Candidate Search Query</label>
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 text-sm"></i>
+                            <input type="text" id="queryInput" value="Python developers with 3+ years experience"
+                                placeholder="e.g. Senior DevOps engineer with AWS & Kubernetes..."
+                                class="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium">
+                        </div>
+                        <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-md">
+                            <i class="fa-solid fa-paper-plane"></i> Search Candidates
+                        </button>
                     </div>
-                    <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-md">
-                        <i class="fa-solid fa-paper-plane"></i> Search Candidates
-                    </button>
+
+                    <!-- Quick Query Chips -->
+                    <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                        <span class="text-[11px] font-semibold text-gray-500 mr-1">Quick Search:</span>
+                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Python developers with 3+ years experience">
+                            Python Devs (3+ yrs)
+                        </button>
+                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="DevOps engineer AWS Kubernetes Terraform">
+                            DevOps &amp; AWS
+                        </button>
+                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Data Scientist PyTorch PhD">
+                            Data Science PhD
+                        </button>
+                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Full-Stack Python React Developer">
+                            Full-Stack React
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Quick Query Chips -->
-                <div class="mt-4 flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-semibold text-gray-500 mr-1">Quick Search:</span>
-                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Python developers with 3+ years experience">
-                        Python Devs (3+ yrs)
+                <!-- Panel 2: Job Description Matcher -->
+                <div id="panelJD" class="p-5 hidden space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-bold text-gray-700 uppercase">Paste Complete Job Description</label>
+                        <button onclick="loadSampleJD()" class="text-xs text-blue-600 font-semibold hover:underline">
+                            <i class="fa-solid fa-paste"></i> Load Sample Senior Python JD
+                        </button>
+                    </div>
+                    <textarea id="jdInput" rows="4"
+                        placeholder="Paste job posting text here (e.g. We are looking for a Senior Backend Developer with 3+ years in Python, FastAPI or Django, Docker, Kubernetes, and AWS...)"
+                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    
+                    <button onclick="matchJobDescription()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-bolt"></i> Match Candidates &amp; Analyze Skill Gaps
                     </button>
-                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="DevOps engineer AWS Kubernetes Terraform">
-                        DevOps & AWS
-                    </button>
-                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Data Scientist PyTorch PhD">
-                        Data Science PhD
-                    </button>
-                    <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition" data-query="Frontend React developer">
-                        Full-Stack React
-                    </button>
+
+                    <!-- Extracted JD Requirements Banner -->
+                    <div id="jdRequirementsBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-xs">
+                        <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-check-double text-indigo-600"></i> Auto-Extracted Job Requirements:
+                        </h4>
+                        <div id="jdRequirementsContent" class="text-gray-700 space-y-1"></div>
+                    </div>
                 </div>
+
             </div>
 
             <!-- Results List Header -->
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <i class="fa-solid fa-ranking-star text-yellow-500"></i> Ranked Results
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star text-amber-500"></i> Ranked Candidates by Suitability
                 </h3>
-                <span id="resultsCount" class="text-xs font-bold text-gray-500 uppercase bg-gray-200 px-3 py-1 rounded-full">0 Candidates</span>
+                <span id="resultsCount" class="text-xs font-bold text-gray-600 uppercase bg-gray-200 px-3 py-1 rounded-full">0 Candidates</span>
             </div>
 
             <!-- Candidates Container -->
-            <div id="resultsContainer" class="space-y-4">
+            <div id="resultsContainer" class="space-y-3.5">
                 <!-- Dynamic cards populated via JavaScript -->
             </div>
 
@@ -173,18 +259,52 @@
 
     </main>
 
+    <!-- Candidate Comparison Modal -->
+    <div id="compareModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="text-xl font-black text-gray-900 flex items-center gap-2">
+                    <i class="fa-solid fa-code-compare text-blue-600"></i> Side-by-Side Candidate Comparison
+                </h3>
+                <button onclick="closeComparisonModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="compareContent" class="overflow-x-auto"></div>
+        </div>
+    </div>
+
+    <!-- Outreach Email Draft Modal -->
+    <div id="outreachModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b pb-3 mb-3">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fa-solid fa-envelope-open-text text-blue-600"></i> Personalized Recruiter Outreach Email
+                </h3>
+                <button onclick="closeOutreachModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Pre-drafted based on candidate's matching skills, background, and target role.</p>
+            <textarea id="outreachEmailText" rows="10" class="w-full p-3 bg-gray-900 text-gray-100 rounded-xl font-mono text-xs mb-3"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="copyOutreachEmail()" id="copyEmailBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center gap-1.5">
+                    <i class="fa-regular fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Candidate Detail Modal -->
-    <div id="candidateModal" class="fixed inset-0 bg-black/50 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div id="candidateModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
-            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">
-                &times;
-            </button>
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             <div id="modalContent"></div>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Application JavaScript Logic -->
     <script>
+        let currentCandidates = [];
+        let selectedForCompare = new Set();
+        let isBlindScreening = false;
+
         const queryInput = document.getElementById('queryInput');
         const searchBtn = document.getElementById('searchBtn');
         const expSlider = document.getElementById('expSlider');
@@ -196,7 +316,15 @@
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const uploadStatus = document.getElementById('uploadStatus');
+        const blindToggle = document.getElementById('blindScreeningToggle');
 
+        // Blind Screening Toggle Listener
+        blindToggle.addEventListener('change', (e) => {
+            isBlindScreening = e.target.checked;
+            renderResults(currentCandidates);
+        });
+
+        // Filter Listeners
         expSlider.addEventListener('input', (e) => {
             expVal.textContent = `${e.target.value} Yrs`;
             performSearch();
@@ -218,10 +346,69 @@
             expSlider.value = 0;
             expVal.textContent = '0 Yrs';
             degreeSelect.value = 'Any';
+            document.getElementById('statusFilter').value = 'All';
             performSearch();
         });
 
-        // Upload tab switcher
+        // Tab Switching in Search Header
+        function switchMode(mode) {
+            const tabSearch = document.getElementById('modeTabSearch');
+            const tabJD = document.getElementById('modeTabJD');
+            const panelSearch = document.getElementById('panelSearch');
+            const panelJD = document.getElementById('panelJD');
+
+            if (mode === 'search') {
+                tabSearch.className = 'flex-1 py-3 px-4 text-center border-b-2 border-blue-600 text-blue-700 font-bold flex items-center justify-center gap-2 transition';
+                tabJD.className = 'flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition';
+                panelSearch.classList.remove('hidden');
+                panelJD.classList.add('hidden');
+                performSearch();
+            } else {
+                tabSearch.className = 'flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition';
+                tabJD.className = 'flex-1 py-3 px-4 text-center border-b-2 border-indigo-600 text-indigo-700 font-bold flex items-center justify-center gap-2 transition';
+                panelSearch.classList.add('hidden');
+                panelJD.classList.remove('hidden');
+            }
+        }
+
+        // Job Description Sample & Matching
+        function loadSampleJD() {
+            document.getElementById('jdInput').value = "Senior Backend Engineer (Python & Cloud Infrastructure)
+We are looking for a Senior Software Engineer with 3+ years of experience in Python, FastAPI or Django, Docker, Kubernetes, and AWS.
+Required Education: Bachelor's degree in Computer Science or related field.
+Key Responsibilities: Design scalable microservices, integrate machine learning APIs, and build CI/CD pipelines.";
+        }
+
+        async function matchJobDescription() {
+            const jdText = document.getElementById('jdInput').value.trim();
+            if (!jdText) return;
+
+            resultsContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-600 block"></i> Analyzing Job Description &amp; evaluating candidates...</div>';
+
+            try {
+                const res = await fetch('/api/match_jd', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jd_text: jdText })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const req = data.jd_requirements;
+                    const banner = document.getElementById('jdRequirementsBanner');
+                    const content = document.getElementById('jdRequirementsContent');
+                    banner.classList.remove('hidden');
+                    content.innerHTML = `
+                        <div><b>Extracted Skills:</b> ${req.skills.map(s => `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded mr-1">${s}</span>`).join('') || 'None detected'}</div>
+                        <div><b>Experience Required:</b> ${req.min_exp > 0 ? req.min_exp + ' Years' : 'Not specified'} | <b>Degree:</b> ${req.min_degree}</div>
+                    `;
+                    renderResults(data.results || []);
+                }
+            } catch (err) {
+                resultsContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to analyze Job Description.</div>';
+            }
+        }
+
+        // Upload Tab Switcher
         function switchUploadTab(tab) {
             const panelFile = document.getElementById('panelFile');
             const panelUrl  = document.getElementById('panelUrl');
@@ -230,33 +417,32 @@
             if (tab === 'file') {
                 panelFile.classList.remove('hidden');
                 panelUrl.classList.add('hidden');
-                tabFile.className = 'flex-1 py-2 bg-blue-600 text-white transition';
-                tabUrl.className  = 'flex-1 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition';
+                tabFile.className = 'flex-1 py-1.5 bg-blue-600 text-white transition text-center';
+                tabUrl.className  = 'flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center';
             } else {
                 panelFile.classList.add('hidden');
                 panelUrl.classList.remove('hidden');
-                tabFile.className = 'flex-1 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition';
-                tabUrl.className  = 'flex-1 py-2 bg-blue-600 text-white transition';
+                tabFile.className = 'flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center';
+                tabUrl.className  = 'flex-1 py-1.5 bg-blue-600 text-white transition text-center';
             }
             document.getElementById('uploadStatus').textContent = '';
         }
 
-        // Drag & Drop / file browse
+        // File Drag & Drop
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) uploadFile(e.target.files[0]);
         });
 
+        // URL Upload Handlers
         const urlInput = document.getElementById('urlInput');
         const fetchUrlBtn = document.getElementById('fetchUrlBtn');
-
         if (fetchUrlBtn) {
             fetchUrlBtn.addEventListener('click', () => {
                 const url = urlInput.value.trim();
                 if (url) uploadFromUrl(url);
             });
         }
-
         if (urlInput) {
             urlInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -275,11 +461,11 @@
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    uploadStatus.textContent = `Uploaded & indexed: ${data.candidate.name}`;
+                    uploadStatus.innerHTML = `<span class="text-emerald-600 font-semibold">Uploaded &amp; indexed: ${data.candidate.name}</span>`;
                     document.getElementById('indexedCount').textContent = `${data.total} Profiles`;
                     performSearch();
                 } else {
-                    uploadStatus.textContent = `Error: ${data.error}`;
+                    uploadStatus.innerHTML = `<span class="text-red-500">Error: ${data.error}</span>`;
                 }
             } catch (err) {
                 uploadStatus.textContent = 'Upload failed.';
@@ -296,7 +482,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    uploadStatus.innerHTML = `<span class="text-emerald-700 font-semibold">Uploaded &amp; indexed: ${data.candidate.name}</span>`;
+                    uploadStatus.innerHTML = `<span class="text-emerald-600 font-semibold">Uploaded &amp; indexed: ${data.candidate.name}</span>`;
                     document.getElementById('indexedCount').textContent = `${data.total} Profiles`;
                     urlInput.value = '';
                     performSearch();
@@ -308,6 +494,7 @@
             }
         }
 
+        // Search Candidates
         async function performSearch() {
             resultsContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-blue-600 block"></i> Ranking candidates...</div>';
 
@@ -329,79 +516,247 @@
             }
         }
 
-        function renderResults(results) {
+        function filterResultsByPipeline() {
+            const status = document.getElementById('statusFilter').value;
+            if (status === 'All') {
+                renderResults(currentCandidates);
+            } else {
+                const filtered = currentCandidates.filter(item => (item.candidate.status || 'New') === status);
+                renderResults(filtered, false);
+            }
+        }
+
+        function renderResults(results, updateGlobal = true) {
+            if (updateGlobal) currentCandidates = results;
             resultsCount.textContent = `${results.length} Candidates`;
+
             if (results.length === 0) {
-                resultsContainer.innerHTML = '<div class="bg-white p-8 rounded-xl text-center text-gray-500 font-medium border border-gray-200">No candidates match your current search filters.</div>';
+                resultsContainer.innerHTML = '<div class="bg-white p-8 rounded-2xl text-center text-gray-500 font-medium border border-gray-200">No candidates match your current search filters.</div>';
                 return;
             }
 
             resultsContainer.innerHTML = results.map((item, idx) => {
                 const c = item.candidate;
                 const score = item.suitability_score;
-                
-                let badgeBg = score >= 80 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 
+                const det = item.match_details;
+
+                const displayName = isBlindScreening ? `${c.anonymous_id} (Blind Profile)` : c.name;
+                const displayEmail = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.email;
+                const displayPhone = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.phone;
+                const displayLocation = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.location;
+
+                let badgeBg = score >= 80 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
                               score >= 60 ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-red-100 text-red-800 border-red-300';
 
-                const skillsBadges = (c.skills || []).map(s => `<span class="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-gray-200 mr-1.5 mb-1.5 inline-block">${s}</span>`).join('');
+                // Skills Badges (Green for matched, Gray for other)
+                const matchedSet = new Set(det.matched_skills || []);
+                const skillsBadges = (c.skills || []).map(s => {
+                    const isMatched = matchedSet.has(s);
+                    const chipStyle = isMatched
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold'
+                        : 'bg-gray-100 text-gray-700 border-gray-200';
+                    return `<span class="${chipStyle} text-[11px] px-2 py-0.5 rounded-md border mr-1 mb-1 inline-block">${s}</span>`;
+                }).join('');
+
+                const isChecked = selectedForCompare.has(c.id) ? 'checked' : '';
 
                 return `
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm card-hover transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="space-y-2 flex-1">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-gray-900 text-white font-bold text-xs px-2.5 py-1 rounded-lg">#${idx + 1}</span>
-                                <h4 class="text-lg font-extrabold text-gray-900">${c.name}</h4>
-                                <span class="text-xs font-semibold text-gray-500 italic">- ${c.title}</span>
-                            </div>
-                            <div class="text-xs text-gray-600 flex flex-wrap gap-4 font-medium">
-                                <span><i class="fa-regular fa-envelope text-blue-500 mr-1"></i>${c.contact.email}</span>
-                                <span><i class="fa-solid fa-phone text-blue-500 mr-1"></i>${c.contact.phone}</span>
-                                <span><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>${c.contact.location}</span>
-                            </div>
-                            <div class="text-xs font-semibold text-gray-700 pt-1">
-                                <span class="mr-4"><i class="fa-solid fa-briefcase text-blue-400 mr-1"></i><b>Exp:</b> ${c.experience_years} Years</span>
-                                <span><i class="fa-solid fa-graduation-cap text-blue-400 mr-1"></i><b>Degree:</b> ${c.highest_degree}</span>
-                            </div>
-                            <div class="pt-2 flex flex-wrap items-center">
-                                ${skillsBadges}
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm card-hover transition flex flex-col md:flex-row justify-between items-start gap-4">
+                        
+                        <!-- Left: Checkbox & Candidate Info -->
+                        <div class="flex items-start gap-3 flex-1">
+                            <input type="checkbox" onchange="toggleCompare('${c.id}')" ${isChecked}
+                                class="mt-1.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer">
+                            
+                            <div class="space-y-1.5 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="bg-gray-900 text-white font-black text-[10px] px-2 py-0.5 rounded">#${idx + 1}</span>
+                                    <h4 class="text-base font-extrabold text-gray-900">${displayName}</h4>
+                                    <span class="text-xs font-semibold text-gray-500">- ${c.title}</span>
+                                </div>
+
+                                <p class="text-xs text-blue-700 font-medium">${c.summary_pitch || ''}</p>
+
+                                <div class="text-[11px] text-gray-500 flex flex-wrap gap-3 font-medium pt-0.5">
+                                    <span><i class="fa-regular fa-envelope text-blue-500 mr-1"></i>${displayEmail}</span>
+                                    <span><i class="fa-solid fa-phone text-blue-500 mr-1"></i>${displayPhone}</span>
+                                    <span><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>${displayLocation}</span>
+                                </div>
+
+                                <div class="text-xs font-semibold text-gray-700 flex flex-wrap gap-3 pt-1">
+                                    <span><i class="fa-solid fa-briefcase text-blue-500 mr-1"></i><b>Exp:</b> ${c.experience_years} Years</span>
+                                    <span><i class="fa-solid fa-graduation-cap text-blue-500 mr-1"></i><b>Degree:</b> ${c.highest_degree}</span>
+                                </div>
+
+                                <!-- Skills List -->
+                                <div class="pt-2 flex flex-wrap items-center">
+                                    ${skillsBadges}
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex flex-col items-center md:items-end justify-between self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
-                            <span class="text-lg font-black px-4 py-1.5 rounded-full border ${badgeBg} shadow-sm">
-                                ${score}% Match
-                            </span>
-                            <button onclick="viewDetails(${idx})" class="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
-                                View Full Profile <i class="fa-solid fa-arrow-right"></i>
-                            </button>
+                        <!-- Right: Score, Breakdown, Pipeline Status & Actions -->
+                        <div class="flex flex-col items-end justify-between self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 min-w-[190px]">
+                            <div class="flex flex-col items-end">
+                                <span class="text-base font-black px-3.5 py-1 rounded-full border ${badgeBg} shadow-sm">
+                                    ${score}% Match
+                                </span>
+                                <div class="text-[10px] text-gray-500 text-right mt-1">
+                                    Skills: ${det.skill_score_pct}% | Exp: ${det.exp_score_pct}%
+                                </div>
+                            </div>
+
+                            <!-- Pipeline Status Selector -->
+                            <div class="mt-3 w-full">
+                                <select onchange="updateCandidateStatus('${c.id}', this.value)"
+                                    class="w-full text-xs font-semibold bg-gray-50 border border-gray-300 rounded-lg p-1.5 text-gray-700 focus:ring-blue-500">
+                                    <option value="New" ${c.status === 'New' ? 'selected' : ''}>Status: New</option>
+                                    <option value="Shortlisted" ${c.status === 'Shortlisted' ? 'selected' : ''}>Status: Shortlisted</option>
+                                    <option value="Interview Scheduled" ${c.status === 'Interview Scheduled' ? 'selected' : ''}>Status: Interview</option>
+                                    <option value="Archived" ${c.status === 'Archived' ? 'selected' : ''}>Status: Archived</option>
+                                </select>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2 mt-2.5">
+                                <button onclick="openOutreachModal(${idx})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                    <i class="fa-regular fa-paper-plane"></i> Email Draft
+                                </button>
+                                <button onclick="viewDetails(${idx})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-bold px-2.5 py-1 rounded-lg transition">
+                                    Profile <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
                         </div>
+
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Candidate Pipeline Status Update
+        async function updateCandidateStatus(candId, newStatus) {
+            try {
+                await fetch('/api/update_status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: candId, status: newStatus })
+                });
+                const candObj = currentCandidates.find(item => item.candidate.id === candId);
+                if (candObj) candObj.candidate.status = newStatus;
+            } catch (e) {
+                console.error('Status update failed');
+            }
+        }
+
+        // Compare Candidates System
+        function toggleCompare(candId) {
+            if (selectedForCompare.has(candId)) {
+                selectedForCompare.delete(candId);
+            } else {
+                if (selectedForCompare.size >= 3) {
+                    alert('You can select a maximum of 3 candidates for side-by-side comparison.');
+                    return;
+                }
+                selectedForCompare.add(candId);
+            }
+
+            const count = selectedForCompare.size;
+            document.getElementById('compareCount').textContent = count;
+            document.getElementById('compareBtn').disabled = count < 2;
+        }
+
+        function openComparisonModal() {
+            const selectedList = currentCandidates.filter(item => selectedForCompare.has(item.candidate.id));
+            if (selectedList.length === 0) return;
+
+            const cols = selectedList.map(item => {
+                const c = item.candidate;
+                const det = item.match_details;
+                return `
+                    <div class="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 min-w-[240px]">
+                        <div>
+                            <span class="text-xs font-bold text-blue-600">${c.status || 'New'}</span>
+                            <h4 class="text-base font-extrabold text-gray-900">${isBlindScreening ? c.anonymous_id : c.name}</h4>
+                            <p class="text-xs text-gray-500">${c.title}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border text-xs">
+                            <b>Match Score:</b> <span class="font-black text-blue-700">${item.suitability_score}%</span>
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <div><b>Experience:</b> ${c.experience_years} Years</div>
+                            <div><b>Highest Degree:</b> ${c.highest_degree}</div>
+                            <div><b>Location:</b> ${isBlindScreening ? 'Hidden' : c.contact.location}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold mb-1">Key Skills:</div>
+                            <div class="flex flex-wrap gap-1">${c.skills.map(s => `<span class="bg-white text-gray-800 text-[10px] px-2 py-0.5 rounded border">${s}</span>`).join('')}</div>
+                        </div>
+                        ${det.missing_skills.length ? `
+                        <div>
+                            <div class="text-xs font-bold text-red-600 mb-1">Missing Skills:</div>
+                            <div class="flex flex-wrap gap-1">${det.missing_skills.map(s => `<span class="bg-red-50 text-red-700 text-[10px] px-2 py-0.5 rounded border border-red-200">${s}</span>`).join('')}</div>
+                        </div>` : ''}
                     </div>
                 `;
             }).join('');
 
-            window.currentSearchData = results;
+            document.getElementById('compareContent').innerHTML = `<div class="flex gap-4">${cols}</div>`;
+            document.getElementById('compareModal').classList.remove('hidden');
         }
 
+        function closeComparisonModal() {
+            document.getElementById('compareModal').classList.add('hidden');
+        }
+
+        // Outreach Email System
+        function openOutreachModal(idx) {
+            const item = currentCandidates[idx];
+            document.getElementById('outreachEmailText').value = item.outreach_draft || '';
+            document.getElementById('outreachModal').classList.remove('hidden');
+        }
+
+        function closeOutreachModal() {
+            document.getElementById('outreachModal').classList.add('hidden');
+        }
+
+        function copyOutreachEmail() {
+            const textarea = document.getElementById('outreachEmailText');
+            textarea.select();
+            document.execCommand('copy');
+            const btn = document.getElementById('copyEmailBtn');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy to Clipboard';
+            }, 2000);
+        }
+
+        // Full Profile Modal
         function viewDetails(idx) {
-            const item = window.currentSearchData[idx];
+            const item = currentCandidates[idx];
             const c = item.candidate;
             const det = item.match_details;
 
+            const displayName = isBlindScreening ? `${c.anonymous_id} (Blind Profile)` : c.name;
+            const displayEmail = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.email;
+            const displayPhone = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.phone;
+            const displayLocation = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.location;
+
             document.getElementById('modalContent').innerHTML = `
-                <h3 class="text-2xl font-extrabold text-gray-900 mb-1">${c.name}</h3>
+                <h3 class="text-2xl font-extrabold text-gray-900 mb-1">${displayName}</h3>
                 <p class="text-sm font-semibold text-blue-600 mb-4">${c.title}</p>
                 <hr class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium mb-6">
-                    <div><b>Email:</b> ${c.contact.email}</div>
-                    <div><b>Phone:</b> ${c.contact.phone}</div>
-                    <div><b>Location:</b> ${c.contact.location}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-medium mb-5 bg-gray-50 p-4 rounded-xl border">
+                    <div><b>Email:</b> ${displayEmail}</div>
+                    <div><b>Phone:</b> ${displayPhone}</div>
+                    <div><b>Location:</b> ${displayLocation}</div>
                     <div><b>Experience:</b> ${c.experience_years} Years</div>
                     <div><b>Highest Degree:</b> ${c.highest_degree}</div>
-                    <div><b>Suitability Score:</b> ${item.suitability_score}%</div>
+                    <div><b>Suitability Match:</b> ${item.suitability_score}%</div>
+                    <div><b>Pipeline Status:</b> ${c.status || 'New'}</div>
                 </div>
-                <h4 class="text-sm font-bold text-gray-900 mb-2">Parsed Skills</h4>
-                <div class="mb-6">${c.skills.map(s => `<span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded mr-1.5 mb-1 inline-block border border-blue-200">${s}</span>`).join('')}</div>
-                <h4 class="text-sm font-bold text-gray-900 mb-2">Raw Resume Text</h4>
+                <h4 class="text-xs font-bold uppercase text-gray-700 mb-2">Parsed Technical Skills</h4>
+                <div class="mb-5">${c.skills.map(s => `<span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded mr-1.5 mb-1 inline-block border border-blue-200 font-medium">${s}</span>`).join('')}</div>
+                <h4 class="text-xs font-bold uppercase text-gray-700 mb-2">Raw Parsed Resume Text</h4>
                 <pre class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs max-h-60 overflow-y-auto whitespace-pre-wrap font-mono">${c.raw_text}</pre>
             `;
 
@@ -412,9 +767,32 @@
             document.getElementById('candidateModal').classList.add('hidden');
         });
 
-        // Run initial search
+        // Recruiter CSV / JSON Exporters
+        function exportData(type) {
+            if (type === 'json') {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentCandidates.map(c => c.candidate), null, 2));
+                const dl = document.createElement('a');
+                dl.setAttribute("href", dataStr);
+                dl.setAttribute("download", "candidates_roster.json");
+                dl.click();
+            } else {
+                let csv = "Name,Title,ExperienceYears,HighestDegree,Status,Skills,Email,Phone,Location
+";
+                currentCandidates.forEach(item => {
+                    const c = item.candidate;
+                    csv += `"${c.name}","${c.title}","${c.experience_years}","${c.highest_degree}","${c.status || 'New'}","${(c.skills || []).join('; ')}","${c.contact.email}","${c.contact.phone}","${c.contact.location}"
+`;
+                });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'candidates_roster.csv');
+                link.click();
+            }
+        }
+
+        // Run Initial Search
         performSearch();
     </script>
 </body>
 </html>
-

@@ -19,7 +19,7 @@ def load_initial_candidates():
     candidates = []
     if os.path.exists(resumes_dir):
         for fname in sorted(os.listdir(resumes_dir)):
-            if fname.endswith(".pdf"):
+            if fname.lower().endswith((".pdf", ".docx", ".txt")):
                 fpath = os.path.join(resumes_dir, fname)
                 parsed = parser.parse(fpath, filename=fname)
                 candidates.append(parsed)
@@ -47,6 +47,21 @@ def search_api():
         min_degree=min_degree
     )
     return jsonify({"success": True, "count": len(results), "results": results})
+
+@app.route('/api/match_jd', methods=['POST'])
+def match_jd_api():
+    data = request.get_json() or {}
+    jd_text = data.get('jd_text', '').strip()
+    if not jd_text:
+        return jsonify({"success": False, "error": "No Job Description text provided"}), 400
+
+    match_data = search_engine.match_job_description(jd_text)
+    return jsonify({
+        "success": True,
+        "jd_requirements": match_data["jd_requirements"],
+        "count": len(match_data["results"]),
+        "results": match_data["results"]
+    })
 
 @app.route('/api/upload', methods=['POST'])
 def upload_api():
@@ -94,23 +109,41 @@ def upload_url_api():
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
         )
         with urllib.request.urlopen(req, timeout=15) as response:
-            pdf_bytes = response.read()
+            file_bytes = response.read()
 
-        if not pdf_bytes:
+        if not file_bytes:
             return jsonify({"success": False, "error": "Downloaded file is empty"}), 400
 
         # Infer filename from URL
         path = urlparse(raw_url).path
         filename = os.path.basename(path) or "document.pdf"
-        if not filename.lower().endswith(".pdf"):
+        if not filename.lower().endswith((".pdf", ".docx", ".txt")):
             filename = f"{filename}.pdf"
 
-        parsed = parser.parse(io.BytesIO(pdf_bytes), filename=filename)
+        parsed = parser.parse(io.BytesIO(file_bytes), filename=filename)
         candidates_db.append(parsed)
         search_engine.set_candidates(candidates_db)
         return jsonify({"success": True, "candidate": parsed, "total": len(candidates_db)})
     except Exception as e:
         return jsonify({"success": False, "error": f"Failed to fetch or parse document link: {str(e)}"}), 500
+
+@app.route('/api/update_status', methods=['POST'])
+def update_status_api():
+    data = request.get_json() or {}
+    cand_id = data.get('id', '')
+    new_status = data.get('status', 'New')
+
+    found = False
+    for c in candidates_db:
+        if c.get('id') == cand_id:
+            c['status'] = new_status
+            found = True
+            break
+
+    if found:
+        search_engine.set_candidates(candidates_db)
+        return jsonify({"success": True, "id": cand_id, "status": new_status})
+    return jsonify({"success": False, "error": "Candidate not found"}), 404
 
 @app.route('/api/candidates', methods=['GET'])
 def get_candidates():

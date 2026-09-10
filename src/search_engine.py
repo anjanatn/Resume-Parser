@@ -137,9 +137,17 @@ class IntelligentSearchEngine:
             # Build breakdown explanation
             missing_skills = [s for s in target_skills if s not in candidate_skills] if target_skills else []
             
+            # Build personalized outreach email draft
+            outreach_draft = self.generate_outreach_email(
+                candidate=candidate,
+                role_or_query=query or "Software Engineering Role",
+                matched_skills=matched_skills
+            )
+
             results.append({
                 "candidate": candidate,
                 "suitability_score": overall_pct,
+                "outreach_draft": outreach_draft,
                 "match_details": {
                     "matched_skills": matched_skills,
                     "missing_skills": missing_skills,
@@ -154,3 +162,61 @@ class IntelligentSearchEngine:
         # Sort candidates descending by suitability score
         results.sort(key=lambda x: x["suitability_score"], reverse=True)
         return results
+
+    def match_job_description(self, jd_text):
+        """
+        Extracts requirements from full Job Description and ranks all candidates with skill gap analysis.
+        """
+        if not jd_text or not self.candidates:
+            return {
+                "jd_requirements": {"skills": [], "min_exp": 0.0, "min_degree": "Any"},
+                "results": []
+            }
+
+        parsed_jd = self.parse_natural_query(jd_text)
+        req_skills = parsed_jd["skills"]
+        min_exp = parsed_jd["min_exp"]
+        min_degree = parsed_jd["min_degree"] or "Any"
+
+        # Search candidates using extracted JD parameters + full semantic text
+        search_results = self.search(
+            query=jd_text,
+            filter_skills=req_skills,
+            min_experience=min_exp,
+            min_degree=min_degree
+        )
+
+        return {
+            "jd_requirements": {
+                "skills": req_skills,
+                "min_exp": min_exp,
+                "min_degree": min_degree
+            },
+            "results": search_results
+        }
+
+    def generate_outreach_email(self, candidate, role_or_query="Software Engineering Role", matched_skills=None):
+        """Generates a personalized recruiter outreach email."""
+        name = candidate.get("name", "Candidate")
+        first_name = name.split()[0] if name else "there"
+        exp = candidate.get("experience_years", 0)
+        skills = matched_skills or candidate.get("skills", [])[:4]
+        skills_str = ", ".join(skills[:3]) if skills else "your technical background"
+
+        clean_role = role_or_query[:45].strip()
+
+        return f"""Subject: Exciting Opportunity at our Startup - {clean_role}
+
+Hi {first_name},
+
+I came across your profile and was really impressed by your background as a {candidate.get('title', 'Engineer')} with {exp} years of industry experience, particularly your expertise in {skills_str}.
+
+We are expanding our engineering team and are looking for someone with your specific strengths to help build our core products.
+
+Would you be open to a quick 15-minute introductory conversation this week to discuss what we are building and see if it could be a great fit?
+
+Looking forward to connecting!
+
+Best regards,
+Sarah & Recruiting Team"""
+
