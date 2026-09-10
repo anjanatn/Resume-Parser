@@ -21,7 +21,7 @@ class IntelligentSearchEngine:
         "PhD": 5, "Master's": 4, "Bachelor's": 3, "Associate's": 2, "None": 0, "Any": 0
     }
 
-    def __init__(self, candidates=None):
+    def __init__(self, candidates=None, use_embeddings=True):
         self.candidates = candidates or []
         self.vectorizer = TfidfVectorizer(
             stop_words="english",
@@ -29,6 +29,13 @@ class IntelligentSearchEngine:
             min_df=1,
             sublinear_tf=True        # Log-scale TF dampening for rare terms
         )
+        self.encoder = None
+        if use_embeddings:
+            try:
+                from sentence_transformers import SentenceTransformer
+                self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+            except Exception:
+                self.encoder = None
         self._update_index()
 
     def set_candidates(self, candidates):
@@ -38,6 +45,7 @@ class IntelligentSearchEngine:
     def _update_index(self):
         if not self.candidates:
             self.tfidf_matrix = None
+            self.dense_embeddings = None
             return
         corpus = [
             f"{c['name']} {c['title']} {' '.join(c['skills'])} {c['raw_text']}"
@@ -47,6 +55,14 @@ class IntelligentSearchEngine:
             self.tfidf_matrix = self.vectorizer.fit_transform(corpus)
         except Exception:
             self.tfidf_matrix = None
+            
+        if self.encoder is not None:
+            try:
+                self.dense_embeddings = self.encoder.encode(corpus, convert_to_numpy=True)
+            except Exception:
+                self.dense_embeddings = None
+        else:
+            self.dense_embeddings = None
 
     # ───────────────────────── QUERY PARSING ────────────────────────────────
 
@@ -95,14 +111,25 @@ class IntelligentSearchEngine:
         target_min_exp = max(min_experience, parsed["min_exp"])
         target_degree_level = self.DEGREE_HIERARCHY.get(parsed["min_degree"] or min_degree, 0)
 
-        # TF-IDF cosine similarities
-        tfidf_scores = [0.0] * len(self.candidates)
-        if query and self.tfidf_matrix is not None:
-            try:
-                q_vec = self.vectorizer.transform([query])
-                tfidf_scores = cosine_similarity(q_vec, self.tfidf_matrix).flatten().tolist()
-            except Exception:
-                pass
+        # Semantic similarity scores (Dense embeddings + TF-IDF fallback)
+        semantic_scores = [0.0] * len(self.candidates)
+        if query:
+            if self.encoder is not None and self.dense_embeddings is not None:
+                try:
+                    q_emb = self.encoder.encode([query], convert_to_numpy=True)
+                    dense_sims = cosine_similarity(q_emb, self.dense_embeddings).flatten().tolist()
+                    semantic_scores = [max(0.0, float(s)) for s in dense_sims]
+                except Exception:
+                    pass
+            
+            # If dense embeddings were not used or all 0, use TF-IDF
+            if all(s == 0.0 for s in semantic_scores) and self.tfidf_matrix is not None:
+                try:
+                    q_vec = self.vectorizer.transform([query])
+                    tfidf_scores = cosine_similarity(q_vec, self.tfidf_matrix).flatten().tolist()
+                    semantic_scores = [max(0.0, float(s)) for s in tfidf_scores]
+                except Exception:
+                    pass
 
         results = []
         for idx, candidate in enumerate(self.candidates):

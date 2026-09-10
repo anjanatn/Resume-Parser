@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI Resume Parser & Intelligent Search Engine - Automated multi-format parsing, JD matching, and blind screening.">
+    <meta name="description" content="AI Resume Intelligence & Talent Search Platform - Automated multi-format parsing, JD matching, dashboard analytics, and blind screening.">
     <title>Resume Intelligence Platform</title>
 
     <!-- Fonts -->
@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Dashboard Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
     /* ── Design System ── */
@@ -35,6 +37,7 @@
         --green-bg:      #f0fdf4; --green-border: #86efac; --green-text: #15803d;
         --amber-bg:      #fffbeb; --amber-border: #fcd34d; --amber-text: #b45309;
         --red-bg:        #fef2f2; --red-border:   #fca5a5; --red-text:   #b91c1c;
+        --purple-bg:     #faf5ff; --purple-border: #d8b4fe; --purple-text: #7e22ce;
 
         --shadow-sm:  0 1px 2px 0 rgba(0,0,0,.05);
         --shadow-md:  0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
@@ -247,10 +250,30 @@
     .kpi-value.brand  { color: var(--brand); }
     .kpi-value.green  { color: var(--green-text); }
     .kpi-value.amber  { color: var(--amber-text); }
-    .kpi-value.red    { color: var(--red-text); }
+    .kpi-value.purple { color: var(--purple-text); }
     .kpi-sub { font-size: 11px; color: var(--text-subtle); margin-top: 4px; }
 
-    /* ── SEARCH PANEL ── */
+    /* ── DASHBOARD SECTION ── */
+    .dashboard-view { display: none; }
+    .dashboard-view.active { display: block; }
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .chart-card {
+        background: var(--bg-surface); border: 1px solid var(--border-light);
+        border-radius: var(--radius-md); padding: 20px;
+        box-shadow: var(--shadow-sm); display: flex; flex-direction: column;
+    }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .chart-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-main); }
+    .chart-box { position: relative; height: 260px; width: 100%; }
+
+    /* Activity table */
+    .activity-table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+    .activity-table th { background: var(--bg-subtle); padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-subtle); border-bottom: 1px solid var(--border-light); }
+    .activity-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+    .activity-table tr:hover td { background: var(--brand-light); }
+
+    /* ── SEARCH & JD PANELS ── */
+    .search-view { display: block; }
     .search-panel {
         background: var(--bg-surface); border: 1px solid var(--border-light);
         border-radius: var(--radius-md); padding: 20px;
@@ -340,6 +363,15 @@
     .cand-stats { display: flex; gap: 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; }
     .cand-stats i { color: var(--brand); margin-right: 3px; }
 
+    /* Ranking Explanation Bullets */
+    .ranking-explanation-box {
+        background: var(--bg-subtle); border-radius: var(--radius-sm);
+        padding: 8px 12px; margin: 8px 0; font-size: 11.5px; color: var(--text-muted);
+    }
+    .ranking-bullet { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 3px; }
+    .ranking-bullet:last-child { margin-bottom: 0; }
+    .ranking-bullet i { color: var(--brand); font-size: 10px; margin-top: 3px; }
+
     /* Skill chips */
     .skill-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .skill-chip { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; display: inline-block; }
@@ -384,6 +416,17 @@
     .loading-state { text-align: center; padding: 48px 24px; color: var(--text-subtle); }
     .loading-state i { font-size: 28px; display: block; margin-bottom: 10px; color: var(--brand); }
 
+    /* ── STATUS PILLS ── */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700;
+    }
+    .status-New { background: var(--brand-light); color: var(--brand); border: 1px solid #bfdbfe; }
+    .status-Shortlisted { background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); }
+    .status-Interview { background: var(--purple-bg); color: var(--purple-text); border: 1px solid var(--purple-border); }
+    .status-Hired { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+    .status-Rejected { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+
     /* ── MODALS ── */
     .modal-overlay {
         position: fixed; inset: 0; background: rgba(15,23,42,.55);
@@ -409,7 +452,7 @@
     .modal-close:hover { color: var(--text-main); }
     .modal-body { padding: 22px; overflow-y: auto; flex: 1; }
 
-    /* Profile modal detail grid */
+    /* Detail grid */
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; }
     .detail-item { display: flex; flex-direction: column; gap: 2px; }
     .detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-subtle); font-weight: 700; }
@@ -439,10 +482,11 @@
     /* Upload status */
     .upload-status { font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted); min-height: 16px; }
     .upload-status.ok { color: var(--green-text); }
+    .upload-status.warn { color: var(--amber-text); }
     .upload-status.err { color: var(--red-text); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } }
     @media (max-width: 900px) {
         .app-shell { flex-direction: column; }
         .sidebar { width: 100%; max-height: none; position: static; flex-direction: row; flex-wrap: wrap; }
@@ -471,11 +515,11 @@
         </a>
         <div class="project-pill">
             <i class="fa-solid fa-circle-dot" style="color:#38bdf8;font-size:8px"></i>
-            <strong>Resume Parser</strong> &mdash; v2.0
+            <strong>Talent Intelligence</strong> &mdash; v2.2
         </div>
         <div class="live-dot-wrap">
             <div class="pulse-dot"></div>
-            Live
+            SQLite Live
         </div>
     </div>
 
@@ -497,12 +541,16 @@
 <!-- ═══ SUB-NAV ═══ -->
 <nav class="sub-nav">
     <div class="nav-tabs">
-        <button class="nav-tab active" id="modeTabSearch" onclick="switchMode('search')">
+        <button class="nav-tab active" id="tabNavDashboard" onclick="switchMainView('dashboard')">
+            <i class="fa-solid fa-chart-pie"></i>
+            Talent Dashboard
+        </button>
+        <button class="nav-tab" id="tabNavSearch" onclick="switchMainView('search')">
             <i class="fa-solid fa-magnifying-glass"></i>
-            Natural Language Search
+            Candidate Search
             <span class="tab-badge" id="searchBadge">0</span>
         </button>
-        <button class="nav-tab" id="modeTabJD" onclick="switchMode('jd')">
+        <button class="nav-tab" id="tabNavJD" onclick="switchMainView('jd')">
             <i class="fa-solid fa-briefcase"></i>
             JD Auto-Matcher
             <span class="tab-badge" id="jdBadge">-</span>
@@ -550,15 +598,16 @@
 
         <!-- Filters -->
         <div class="sidebar-section">
-            <div class="sidebar-title"><i class="fa-solid fa-sliders"></i> Candidate Filters</div>
+            <div class="sidebar-title"><i class="fa-solid fa-sliders"></i> Pipeline Filters</div>
             <div class="form-group">
                 <label class="form-label">Pipeline Stage</label>
                 <select id="statusFilter" class="form-select" onchange="filterResultsByPipeline()">
                     <option value="All">All Stages</option>
                     <option value="New">New</option>
                     <option value="Shortlisted">Shortlisted</option>
-                    <option value="Interview Scheduled">Interview Scheduled</option>
-                    <option value="Archived">Archived</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Hired">Hired</option>
+                    <option value="Rejected">Rejected</option>
                 </select>
             </div>
             <div class="form-group">
@@ -585,7 +634,7 @@
         <!-- Export -->
         <div class="sidebar-section" style="background:var(--brand-light);border-color:#bfdbfe;">
             <div class="sidebar-title" style="color:#1e40af;"><i class="fa-solid fa-file-export" style="color:var(--brand)"></i> Recruiter Export</div>
-            <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Download candidate roster for HR review.</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Export candidate dataset or audit roster.</p>
             <div class="export-grid">
                 <button onclick="exportData('csv')" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-csv" style="color:#10b981"></i> CSV</button>
                 <button onclick="exportData('json')" class="btn btn-outline btn-sm"><i class="fa-solid fa-code" style="color:var(--brand)"></i> JSON</button>
@@ -597,88 +646,184 @@
     <!-- ── MAIN CONTENT ── -->
     <main class="main-content">
 
-        <!-- KPI Row -->
-        <div class="kpi-row">
-            <div class="kpi-card">
-                <div class="kpi-label">Total Indexed</div>
-                <div class="kpi-value brand" id="kpiTotal">{{ candidate_count }}</div>
-                <div class="kpi-sub">Profiles in database</div>
+        <!-- ════════════ VIEW 1: DASHBOARD ════════════ -->
+        <div id="viewDashboard" class="dashboard-view active">
+            <!-- Dashboard KPIs -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Resumes</div>
+                    <div class="kpi-value brand" id="dashTotal">{{ candidate_count }}</div>
+                    <div class="kpi-sub">Indexed in database</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Shortlisted</div>
+                    <div class="kpi-value amber" id="dashShortlisted">0</div>
+                    <div class="kpi-sub">Ready for review</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Hired Candidates</div>
+                    <div class="kpi-value green" id="dashHired">0</div>
+                    <div class="kpi-sub">Successful hires</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Experience</div>
+                    <div class="kpi-value purple" id="dashAvgExp">0 Yrs</div>
+                    <div class="kpi-sub">Talent seniority average</div>
+                </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Results Found</div>
-                <div class="kpi-value" id="kpiResults">0</div>
-                <div class="kpi-sub">From last search</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Avg Match Score</div>
-                <div class="kpi-value green" id="kpiAvgScore">-</div>
-                <div class="kpi-sub">Suitability percentage</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Top Score</div>
-                <div class="kpi-value brand" id="kpiTopScore">-</div>
-                <div class="kpi-sub">Best candidate match</div>
-            </div>
-        </div>
 
-        <!-- Search / JD Panel -->
-        <div class="search-panel">
-            <!-- Natural Language Panel -->
-            <div id="panelSearch">
-                <div class="panel-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--brand)"></i> Natural Language Search</div>
-                <div class="search-row">
-                    <div class="search-input-wrap">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="queryInput" class="search-input"
-                            value="Python developers with 3+ years experience"
-                            placeholder="e.g. Senior DevOps engineer with AWS and Kubernetes...">
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-code" style="color:var(--brand);margin-right:6px"></i> Top Technical Skills</div>
                     </div>
-                    <button id="searchBtn" class="btn btn-primary">
-                        <i class="fa-solid fa-paper-plane"></i> Search
+                    <div class="chart-box">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-layer-group" style="color:#10b981;margin-right:6px"></i> Pipeline Stage Funnel</div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="pipelineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-business-time" style="color:#f59e0b;margin-right:6px"></i> Experience Distribution</div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="expChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fa-solid fa-graduation-cap" style="color:#8b5cf6;margin-right:6px"></i> Education Qualifications</div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="degreeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Ingested Candidates -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--brand);margin-right:6px"></i> Recent Candidate Activity</div>
+                    <button class="btn btn-secondary btn-sm" onclick="switchMainView('search')">Search All</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Target Title</th>
+                                <th>Experience</th>
+                                <th>Degree</th>
+                                <th>Pipeline Stage</th>
+                                <th>Ingested Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentCandidatesBody">
+                            <tr><td colspan="6" style="text-align:center;color:var(--text-subtle);padding:16px;">Loading talent activity...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════ VIEW 2: SEARCH / JD MATCHER ════════════ -->
+        <div id="viewSearch" class="dashboard-view">
+
+            <!-- KPI Row for Search -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Candidates</div>
+                    <div class="kpi-value brand" id="kpiTotal">{{ candidate_count }}</div>
+                    <div class="kpi-sub">Database pool</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Matched Candidates</div>
+                    <div class="kpi-value" id="kpiResults">0</div>
+                    <div class="kpi-sub">Matching search criteria</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Suitability</div>
+                    <div class="kpi-value green" id="kpiAvgScore">-</div>
+                    <div class="kpi-sub">Calculated match percentage</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Highest Score</div>
+                    <div class="kpi-value brand" id="kpiTopScore">-</div>
+                    <div class="kpi-sub">Top candidate rank</div>
+                </div>
+            </div>
+
+            <!-- Search / JD Panel -->
+            <div class="search-panel">
+                <!-- Natural Language Search Mode -->
+                <div id="panelSearch">
+                    <div class="panel-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--brand)"></i> Natural Language Candidate Search</div>
+                    <div class="search-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="queryInput" class="search-input"
+                                value="Python developers with 3+ years experience"
+                                placeholder="e.g. Senior DevOps engineer with AWS and Kubernetes...">
+                        </div>
+                        <button id="searchBtn" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i> Search
+                        </button>
+                    </div>
+                    <div class="chip-row">
+                        <span class="chip-label">Quick Search:</span>
+                        <button class="chip" data-query="Python developers with 3+ years experience">Python Devs 3+yr</button>
+                        <button class="chip" data-query="DevOps engineer AWS Kubernetes Terraform">DevOps &amp; AWS</button>
+                        <button class="chip" data-query="Data Scientist PyTorch NLP PhD">Data Science PhD</button>
+                        <button class="chip" data-query="Full-Stack Python React Developer">Full-Stack React</button>
+                    </div>
+                </div>
+
+                <!-- JD Matcher Mode -->
+                <div id="panelJD" class="jd-panel">
+                    <div class="panel-title"><i class="fa-solid fa-briefcase" style="color:var(--brand)"></i> Job Description Auto-Matcher &amp; Skill Gap Analysis</div>
+                    <div class="jd-header">
+                        <span class="jd-label">Paste Complete Job Description</span>
+                        <button class="jd-sample-btn" onclick="loadSampleJD()"><i class="fa-solid fa-paste"></i> Load Sample Senior Python JD</button>
+                    </div>
+                    <textarea id="jdInput" class="jd-textarea" rows="5"
+                        placeholder="Paste job posting text here (e.g. We are looking for a Senior Backend Developer with 3+ years in Python, FastAPI, Docker, and AWS...)"></textarea>
+                    <button onclick="matchJobDescription()" class="btn btn-primary">
+                        <i class="fa-solid fa-bolt"></i> Match Candidates &amp; Analyze Skill Gaps
                     </button>
-                </div>
-                <div class="chip-row">
-                    <span class="chip-label">Quick:</span>
-                    <button class="chip" data-query="Python developers with 3+ years experience">Python Devs 3+yr</button>
-                    <button class="chip" data-query="DevOps engineer AWS Kubernetes Terraform">DevOps &amp; AWS</button>
-                    <button class="chip" data-query="Data Scientist PyTorch PhD">Data Science PhD</button>
-                    <button class="chip" data-query="Full-Stack Python React Developer">Full-Stack React</button>
+                    <div id="jdRequirementsBanner" class="jd-banner">
+                        <div class="jd-banner-title"><i class="fa-solid fa-check-double"></i> Auto-Extracted Requirements</div>
+                        <div id="jdRequirementsContent"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- JD Matcher Panel -->
-            <div id="panelJD" class="jd-panel">
-                <div class="panel-title"><i class="fa-solid fa-briefcase" style="color:var(--brand)"></i> Job Description Auto-Matcher</div>
-                <div class="jd-header">
-                    <span class="jd-label">Paste Complete Job Description</span>
-                    <button class="jd-sample-btn" onclick="loadSampleJD()"><i class="fa-solid fa-paste"></i> Load Sample JD</button>
+            <!-- Results Section -->
+            <div class="results-header">
+                <div class="results-title">
+                    <i class="fa-solid fa-ranking-star" style="color:#f59e0b"></i>
+                    Ranked Candidates
                 </div>
-                <textarea id="jdInput" class="jd-textarea" rows="5"
-                    placeholder="Paste job posting text here (e.g. We are looking for a Senior Backend Developer with 3+ years in Python, FastAPI, Docker, and AWS...)"></textarea>
-                <button onclick="matchJobDescription()" class="btn btn-primary">
-                    <i class="fa-solid fa-bolt"></i> Match Candidates &amp; Analyze Skill Gaps
-                </button>
-                <div id="jdRequirementsBanner" class="jd-banner">
-                    <div class="jd-banner-title"><i class="fa-solid fa-check-double"></i> Auto-Extracted Requirements</div>
-                    <div id="jdRequirementsContent"></div>
+                <span id="resultsCount" class="results-badge">0 results</span>
+            </div>
+
+            <div id="resultsContainer">
+                <div class="empty-state">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Use the search bar above to rank candidates by suitability.
                 </div>
             </div>
-        </div>
 
-        <!-- Results -->
-        <div class="results-header">
-            <div class="results-title">
-                <i class="fa-solid fa-ranking-star" style="color:#f59e0b"></i>
-                Ranked Candidates
-            </div>
-            <span id="resultsCount" class="results-badge">0 results</span>
-        </div>
-
-        <div id="resultsContainer">
-            <div class="empty-state">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                Use the search bar above to rank candidates by suitability.
-            </div>
         </div>
 
     </main>
@@ -687,7 +832,7 @@
 
 <!-- ═══ COMPARISON MODAL ═══ -->
 <div id="compareModal" class="modal-overlay">
-    <div class="modal-box" style="max-width:900px;max-height:90vh;">
+    <div class="modal-box" style="max-width:920px;max-height:90vh;">
         <div class="modal-header">
             <div class="modal-title"><i class="fa-solid fa-code-compare"></i> Side-by-Side Comparison</div>
             <button class="modal-close" onclick="closeComparisonModal()">&times;</button>
@@ -735,6 +880,7 @@
     let currentCandidates = [];
     let selectedForCompare = new Set();
     let isBlindScreening = false;
+    let chartInstances = {};
 
     const queryInput    = document.getElementById('queryInput');
     const searchBtn     = document.getElementById('searchBtn');
@@ -765,6 +911,7 @@
     document.querySelectorAll('.chip').forEach(btn => {
         btn.addEventListener('click', () => {
             queryInput.value = btn.getAttribute('data-query');
+            switchMainView('search');
             performSearch();
         });
     });
@@ -778,23 +925,175 @@
         performSearch();
     });
 
-    function switchMode(mode) {
-        const tabSearch  = document.getElementById('modeTabSearch');
-        const tabJD      = document.getElementById('modeTabJD');
-        const panelSearch = document.getElementById('panelSearch');
-        const panelJD    = document.getElementById('panelJD');
-        if (mode === 'search') {
-            tabSearch.classList.add('active');
-            tabJD.classList.remove('active');
-            panelSearch.style.display = '';
+    // Main Navigation View Switcher (Dashboard vs Search vs JD)
+    function switchMainView(view) {
+        const tabDash = document.getElementById('tabNavDashboard');
+        const tabSrch = document.getElementById('tabNavSearch');
+        const tabJD   = document.getElementById('tabNavJD');
+        const viewDash = document.getElementById('viewDashboard');
+        const viewSrch = document.getElementById('viewSearch');
+        const panelSrch = document.getElementById('panelSearch');
+        const panelJD   = document.getElementById('panelJD');
+
+        tabDash.classList.remove('active');
+        tabSrch.classList.remove('active');
+        tabJD.classList.remove('active');
+
+        if (view === 'dashboard') {
+            tabDash.classList.add('active');
+            viewDash.classList.add('active');
+            viewSrch.classList.remove('active');
+            loadDashboardData();
+        } else if (view === 'search') {
+            tabSrch.classList.add('active');
+            viewDash.classList.remove('active');
+            viewSrch.classList.add('active');
+            panelSrch.style.display = '';
             panelJD.classList.remove('active');
             performSearch();
-        } else {
+        } else if (view === 'jd') {
             tabJD.classList.add('active');
-            tabSearch.classList.remove('active');
-            panelSearch.style.display = 'none';
+            viewDash.classList.remove('active');
+            viewSrch.classList.add('active');
+            panelSrch.style.display = 'none';
             panelJD.classList.add('active');
         }
+    }
+
+    // Load Dashboard Charts & Stats
+    async function loadDashboardData() {
+        try {
+            const res = await fetch('/api/dashboard_stats');
+            const data = await res.json();
+            if (data.success) {
+                const s = data.data;
+                document.getElementById('dashTotal').textContent = s.total_candidates;
+                document.getElementById('dashShortlisted').textContent = s.shortlisted_count;
+                document.getElementById('dashHired').textContent = s.hired_count;
+                document.getElementById('dashAvgExp').textContent = s.avg_experience + ' Yrs';
+                document.getElementById('indexedCount').textContent = s.total_candidates + ' Profiles';
+
+                renderCharts(s);
+                renderRecentActivity(s.recent_candidates);
+            }
+        } catch (e) {
+            console.error('Failed to load dashboard statistics', e);
+        }
+    }
+
+    function renderCharts(data) {
+        // 1. Top Skills Chart
+        const skillsLabels = Object.keys(data.top_skills || {});
+        const skillsValues = Object.values(data.top_skills || {});
+        
+        if (chartInstances.skills) chartInstances.skills.destroy();
+        const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+        chartInstances.skills = new Chart(ctxSkills, {
+            type: 'bar',
+            data: {
+                labels: skillsLabels,
+                datasets: [{
+                    label: 'Resumes with Skill',
+                    data: skillsValues,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { precision: 0 } },
+                    y: { ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        // 2. Pipeline Funnel (Doughnut)
+        const pipeLabels = Object.keys(data.status_breakdown || {});
+        const pipeValues = Object.values(data.status_breakdown || {});
+        if (chartInstances.pipeline) chartInstances.pipeline.destroy();
+        const ctxPipe = document.getElementById('pipelineChart').getContext('2d');
+        chartInstances.pipeline = new Chart(ctxPipe, {
+            type: 'doughnut',
+            data: {
+                labels: pipeLabels,
+                datasets: [{
+                    data: pipeValues,
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        // 3. Experience Histogram
+        const expLabels = Object.keys(data.experience_breakdown || {});
+        const expValues = Object.values(data.experience_breakdown || {});
+        if (chartInstances.exp) chartInstances.exp.destroy();
+        const ctxExp = document.getElementById('expChart').getContext('2d');
+        chartInstances.exp = new Chart(ctxExp, {
+            type: 'bar',
+            data: {
+                labels: expLabels,
+                datasets: [{
+                    label: 'Candidates',
+                    data: expValues,
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { ticks: { precision: 0 } } }
+            }
+        });
+
+        // 4. Degree Breakdown Pie Chart
+        const degLabels = Object.keys(data.degree_breakdown || {});
+        const degValues = Object.values(data.degree_breakdown || {});
+        if (chartInstances.degree) chartInstances.degree.destroy();
+        const ctxDeg = document.getElementById('degreeChart').getContext('2d');
+        chartInstances.degree = new Chart(ctxDeg, {
+            type: 'pie',
+            data: {
+                labels: degLabels,
+                datasets: [{
+                    data: degValues,
+                    backgroundColor: ['#6366f1', '#06b6d4', '#f43f5e', '#84cc16', '#a855f7']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+    }
+
+    function renderRecentActivity(candidates) {
+        const tbody = document.getElementById('recentCandidatesBody');
+        if (!candidates || candidates.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;">No candidates in database.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = candidates.map(c => `
+            <tr>
+                <td><b>${c.name}</b></td>
+                <td style="color:var(--text-muted)">${c.title}</td>
+                <td>${c.experience_years} yrs</td>
+                <td>${c.highest_degree}</td>
+                <td><span class="status-badge status-${c.status || 'New'}">${c.status || 'New'}</span></td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-subtle)">${c.created_at || 'Recently'}</td>
+            </tr>
+        `).join('');
     }
 
     function loadSampleJD() {
@@ -876,10 +1175,15 @@
             const res = await fetch('/api/upload', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
-                uploadStatus.textContent = 'Uploaded & indexed: ' + data.candidate.name;
-                uploadStatus.className = 'upload-status ok';
+                if (data.is_duplicate) {
+                    uploadStatus.textContent = 'Notice: ' + data.duplicate_message;
+                    uploadStatus.className = 'upload-status warn';
+                } else {
+                    uploadStatus.textContent = 'Indexed: ' + data.candidate.name;
+                    uploadStatus.className = 'upload-status ok';
+                }
                 document.getElementById('indexedCount').textContent = data.total + ' Profiles';
-                document.getElementById('kpiTotal').textContent = data.total;
+                loadDashboardData();
                 performSearch();
             } else {
                 uploadStatus.textContent = 'Error: ' + data.error;
@@ -902,11 +1206,16 @@
             });
             const data = await res.json();
             if (data.success) {
-                uploadStatus.textContent = 'Uploaded & indexed: ' + data.candidate.name;
-                uploadStatus.className = 'upload-status ok';
+                if (data.is_duplicate) {
+                    uploadStatus.textContent = 'Notice: ' + data.duplicate_message;
+                    uploadStatus.className = 'upload-status warn';
+                } else {
+                    uploadStatus.textContent = 'Indexed: ' + data.candidate.name;
+                    uploadStatus.className = 'upload-status ok';
+                }
                 document.getElementById('indexedCount').textContent = data.total + ' Profiles';
-                document.getElementById('kpiTotal').textContent = data.total;
                 urlInput.value = '';
+                loadDashboardData();
                 performSearch();
             } else {
                 uploadStatus.textContent = 'Error: ' + data.error;
@@ -993,6 +1302,11 @@
 
             const isChecked = selectedForCompare.has(c.id) ? 'checked' : '';
 
+            // Render ranking explanation bullets
+            const explanationBullets = (item.ranking_explanation || []).map(b => 
+                `<div class="ranking-bullet"><i class="fa-solid fa-check"></i><span>${b}</span></div>`
+            ).join('');
+
             return '<div class="candidate-card ' + cardCls + '">' +
                 '<input type="checkbox" class="card-checkbox" onchange="toggleCompare(\'' + c.id + '\')" ' + isChecked + '>' +
                 '<div class="card-body">' +
@@ -1000,6 +1314,7 @@
                         '<span class="rank-badge">#' + (idx + 1) + '</span>' +
                         '<span class="cand-name">' + displayName + '</span>' +
                         '<span class="cand-title">' + c.title + '</span>' +
+                        '<span class="status-badge status-' + (c.status || 'New') + '" style="margin-left:auto">' + (c.status || 'New') + '</span>' +
                     '</div>' +
                     '<div class="cand-pitch">' + (c.summary_pitch || '') + '</div>' +
                     '<div class="cand-meta">' +
@@ -1011,6 +1326,7 @@
                         '<span><i class="fa-solid fa-briefcase"></i><b>Exp:</b> ' + c.experience_years + ' yrs</span>' +
                         '<span><i class="fa-solid fa-graduation-cap"></i><b>Degree:</b> ' + c.highest_degree + '</span>' +
                     '</div>' +
+                    '<div class="ranking-explanation-box">' + explanationBullets + '</div>' +
                     '<div class="skill-chips">' + skillChips + '</div>' +
                 '</div>' +
                 '<div class="card-side">' +
@@ -1026,10 +1342,11 @@
                         '</div>' +
                     '</div>' +
                     '<select class="pipeline-select" onchange="updateCandidateStatus(\'' + c.id + '\', this.value)">' +
-                        '<option value="New"' + (c.status === 'New' ? ' selected' : '') + '>New</option>' +
-                        '<option value="Shortlisted"' + (c.status === 'Shortlisted' ? ' selected' : '') + '>Shortlisted</option>' +
-                        '<option value="Interview Scheduled"' + (c.status === 'Interview Scheduled' ? ' selected' : '') + '>Interview Scheduled</option>' +
-                        '<option value="Archived"' + (c.status === 'Archived' ? ' selected' : '') + '>Archived</option>' +
+                        '<option value="New"' + (c.status === 'New' ? ' selected' : '') + '>Stage: New</option>' +
+                        '<option value="Shortlisted"' + (c.status === 'Shortlisted' ? ' selected' : '') + '>Stage: Shortlisted</option>' +
+                        '<option value="Interview"' + (c.status === 'Interview' ? ' selected' : '') + '>Stage: Interview</option>' +
+                        '<option value="Hired"' + (c.status === 'Hired' ? ' selected' : '') + '>Stage: Hired</option>' +
+                        '<option value="Rejected"' + (c.status === 'Rejected' ? ' selected' : '') + '>Stage: Rejected</option>' +
                     '</select>' +
                     '<div class="card-actions">' +
                         '<button class="action-btn email" onclick="openOutreachModal(' + idx + ')"><i class="fa-regular fa-paper-plane"></i> Email</button>' +
@@ -1049,6 +1366,7 @@
             });
             const obj = currentCandidates.find(item => item.candidate.id === candId);
             if (obj) obj.candidate.status = newStatus;
+            loadDashboardData();
         } catch (e) { console.error('Status update failed'); }
     }
 
@@ -1114,7 +1432,6 @@
     function viewDetails(idx) {
         const item = currentCandidates[idx];
         const c   = item.candidate;
-        const det = item.match_details;
 
         const displayName     = isBlindScreening ? (c.anonymous_id + ' (Blind Profile)') : c.name;
         const displayEmail    = isBlindScreening ? 'Hidden' : c.contact.email;
@@ -1147,7 +1464,6 @@
         document.getElementById('candidateModal').classList.remove('open');
     });
 
-    // Close modals on overlay click
     ['compareModal','outreachModal','candidateModal'].forEach(id => {
         document.getElementById(id).addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('open');
@@ -1175,7 +1491,8 @@
         }
     }
 
-    // Boot
+    // Initial load
+    loadDashboardData();
     performSearch();
 </script>
 

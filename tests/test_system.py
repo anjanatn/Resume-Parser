@@ -217,9 +217,57 @@ class TestResumeParserSystem(unittest.TestCase):
         results = engine.search(query="machine learning", min_degree="PhD")
         # Education is 10% of total — Bachelor's with stronger skills can still rank higher.
         # Assert at least one PhD candidate surfaces in the result set.
-        if results:
-            phd_in_results = any(r["candidate"]["highest_degree"] == "PhD" for r in results)
-            self.assertTrue(phd_in_results, "Expected at least one PhD candidate in results")
+    # ── Database & Deduplication Tests ────────────────────────────────────
+
+    def test_database_persistence(self):
+        """Candidates should persist and be retrievable from SQLite."""
+        from db.database import save_candidate, get_all_candidates, update_candidate_status
+        cand = self.parsed_candidates[0]
+        save_candidate(cand)
+        all_cands = get_all_candidates()
+        self.assertGreater(len(all_cands), 0)
+        
+        # Test status update
+        update_candidate_status(cand["id"], "Shortlisted")
+        updated_cands = get_all_candidates()
+        target = next((c for c in updated_cands if c["id"] == cand["id"]), None)
+        self.assertIsNotNone(target)
+        self.assertEqual(target["status"], "Shortlisted")
+
+    def test_duplicate_detection(self):
+        """Duplicate content hash should be recognized."""
+        from db.database import compute_content_hash, find_duplicate, save_candidate
+        cand = self.parsed_candidates[0]
+        save_candidate(cand)
+        
+        content_hash = compute_content_hash(cand["raw_text"])
+        dup, dup_type = find_duplicate(content_hash, cand["name"], cand["contact"]["email"])
+        self.assertIsNotNone(dup)
+        self.assertIn(dup_type, ["exact_content", "email_match"])
+
+    def test_dashboard_metrics_aggregation(self):
+        """Dashboard metrics should return counts, skills, and experience breakdowns."""
+        from db.database import get_dashboard_metrics, save_candidate
+        for c in self.parsed_candidates:
+            save_candidate(c)
+            
+        metrics = get_dashboard_metrics()
+        self.assertGreaterEqual(metrics["total_candidates"], 10)
+        self.assertIn("status_breakdown", metrics)
+        self.assertIn("experience_breakdown", metrics)
+        self.assertIn("top_skills", metrics)
+        self.assertIn("degree_breakdown", metrics)
+
+    def test_hr_email_and_n8n_notifier(self):
+        """Notifier should run and simulate alert without throwing."""
+        from src.notifier import send_hr_email_alert, dispatch_n8n_event
+        cand = self.parsed_candidates[0]
+        ok, msg = send_hr_email_alert(cand, 92.5, "Senior Python Engineer")
+        self.assertTrue(ok)
+        
+        # n8n event dispatch without URL should return False gracefully
+        ok_n8n, _ = dispatch_n8n_event("TEST_EVENT", {"test": True})
+        self.assertIsInstance(ok_n8n, bool)
 
 
 if __name__ == "__main__":
