@@ -1,12 +1,52 @@
-# AI Resume Parser & Intelligent Candidate Search Engine
+# Resume Intelligence Platform
 
-An automated, AI-powered resume parsing and candidate ranking system built with Python, Flask, and Scikit-Learn, deployable on Vercel.
+AI-powered resume processing and search system that transforms raw PDF/DOCX resumes into structured, searchable profiles — with natural language search, job description matching, and blind screening support.
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
-![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)
-![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3-orange?logo=scikit-learn)
-![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)
-![License](https://img.shields.io/badge/License-MIT-green)
+---
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         BROWSER (SPA)                           │
+│   Dark-nav header  │  JD Matcher  │  Candidate Cards  │ Modals  │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ HTTP (JSON)
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Flask API  (api/index.py)                   │
+│  GET /            POST /api/search    POST /api/match_jd        │
+│  POST /api/upload POST /api/upload_url POST /api/update_status  │
+└──────┬──────────────────────┬──────────────────────────────────┘
+       │                      │
+       ▼                      ▼
+┌──────────────┐   ┌──────────────────────────────────────────────┐
+│  ResumeParser│   │        IntelligentSearchEngine               │
+│  src/parser.py   │        src/search_engine.py                  │
+│              │   │                                              │
+│ 1. PyMuPDF   │   │  Hybrid Scoring (100 pts):                   │
+│ 2. pypdf     │   │    Skill Match       40%  (taxonomy lookup)  │
+│ 3. OCR *     │   │    Experience Match  30%  (date ranges)      │
+│ 4. DOCX      │   │    TF-IDF Semantic   20%  (bigram cosine)    │
+│ 5. TXT       │   │    Education Match   10%  (degree hierarchy) │
+└──────┬───────┘   └──────────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────┐
+│  src/utils.py            │
+│  SKILLS_TAXONOMY (140+)  │
+│  DEGREE_PATTERNS         │
+│  Contact regex helpers   │
+└──────────────────────────┘
+       │
+       ▼
+┌──────────────────────────┐
+│  ResumeParserUnlocked/   │  ← Real resumes (gitignored)
+│  data/resumes/           │  ← Synthetic resumes (ReportLab)
+└──────────────────────────┘
+```
+
+> \* OCR: requires `pytesseract` + Tesseract binary for scanned/image PDFs.
 
 ---
 
@@ -14,142 +54,79 @@ An automated, AI-powered resume parsing and candidate ranking system built with 
 
 | Feature | Description |
 |---|---|
-| **PDF Parsing** | Extracts structured data from PDF resumes using PyMuPDF (with pypdf fallback) |
-| **Skills Extraction** | Matches 100+ skills against a canonical taxonomy (Python, AWS, React, Docker, etc.) |
-| **Intelligent Ranking** | Hybrid TF-IDF + rule-based suitability scoring (skill, experience, education, semantic) |
-| **Natural Language Search** | Query in plain English: "Senior Python developer with 5+ years and AWS experience" |
-| **Faceted Filtering** | Filter by minimum experience (years), education level, and required skills |
-| **Resume Upload** | Drag-and-drop upload for new PDF resumes with live re-indexing |
-| **Contact Extraction** | Extracts email, phone, LinkedIn, GitHub, and location automatically |
-| **Education Detection** | Identifies PhD, Master's, Bachelor's, and Associate's degrees |
-| **Experience Calculation** | Computes total years from date ranges in work history sections |
-| **Web UI** | Clean, responsive HTML/Tailwind CSS frontend with FontAwesome icons |
-
----
-
-## Project Architecture
-
-```
-RESUME_PARSER/
-|
-|-- api/
-|   `-- index.py              # Flask app -- Vercel serverless entry point
-|
-|-- src/
-|   |-- parser.py             # Core PDF parsing & information extraction engine
-|   |-- search_engine.py      # Hybrid TF-IDF + rule-based search & ranking engine
-|   |-- generator.py          # Sample resume PDF generator (ReportLab)
-|   `-- utils.py              # Skills taxonomy, regex patterns, helper functions
-|
-|-- templates/
-|   `-- index.html            # Responsive Tailwind CSS web interface
-|
-|-- data/
-|   `-- resumes/              # 10 pre-generated sample PDF resumes
-|
-|-- tests/
-|   `-- test_system.py        # Unit tests for parsing, search, and ranking
-|
-|-- app.py                    # Streamlit interactive dashboard (local use)
-|-- demo.py                   # Quick CLI demo script
-|-- requirements.txt          # Python dependencies
-|-- vercel.json               # Vercel deployment configuration
-`-- README.md
-```
+| **Multi-format parsing** | PDF (digital + OCR scanned), DOCX, TXT |
+| **Natural Language Search** | "Python devs with 3+ years" → ranked results |
+| **JD Auto-Matcher** | Paste full job posting → auto-extract skills/exp → rank all candidates |
+| **Skill Gap Analysis** | Per-candidate matched vs. missing skills |
+| **Ranking Explanation** | Plain-English bullets explaining *why* each candidate ranked |
+| **Blind Screening Mode** | Hide PII (name/email/phone/location), show anonymous IDs |
+| **Side-by-Side Comparison** | Compare up to 3 candidates across all attributes |
+| **Recruiter Pipeline** | Kanban-style status: New → Shortlisted → Interview Scheduled → Archived |
+| **Outreach Email Generator** | Pre-drafted personalized recruiter email per candidate |
+| **URL Resume Upload** | Paste Google Drive / Dropbox / direct PDF link |
+| **CSV / JSON Export** | Download full candidate roster |
+| **Evaluation Suite** | Precision@5, Recall@10, MRR, parsing accuracy |
 
 ---
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.10+
-- pip
-
-### 1. Clone the Repository
-
 ```bash
+# Clone and install
 git clone https://github.com/anjanatn/Resume-Parser.git
 cd Resume-Parser
-```
-
-### 2. Install Dependencies
-
-```bash
 pip install -r requirements.txt
-```
 
-### 3. Generate Sample Resumes (Optional)
-
-The `data/resumes/` directory already contains 10 pre-built sample PDF resumes. To regenerate them:
-
-```bash
+# Add your resumes to ResumeParserUnlocked/
+# (or generate synthetic ones)
 python src/generator.py
-```
 
-### 4. Run the Web App (Flask)
-
-```bash
+# Run the app
 python api/index.py
-```
-
-Open [http://localhost:5000](http://localhost:5000) in your browser.
-
-### 5. Run the Streamlit Dashboard (Alternative UI)
-
-```bash
-pip install streamlit pandas
-streamlit run app.py
-```
-
-Open [http://localhost:8501](http://localhost:8501) in your browser.
-
----
-
-## Deployment on Vercel
-
-This project is configured for Vercel Serverless deployment.
-
-### Deploy via Vercel CLI
-
-```bash
-npm install -g vercel
-vercel --prod
-```
-
-### Deploy via GitHub Integration
-
-1. Push this repository to GitHub.
-2. Go to [vercel.com](https://vercel.com) > New Project > Import from GitHub.
-3. Select `anjanatn/Resume-Parser`.
-4. Vercel auto-detects `vercel.json` and deploys automatically.
-
-The `vercel.json` routes all requests to `api/index.py`:
-
-```json
-{
-  "version": 2,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
-  ]
-}
+# Open http://127.0.0.1:5000
 ```
 
 ---
 
-## REST API Endpoints
+## Installation
+
+### Requirements
+
+| Package | Purpose |
+|---|---|
+| `Flask>=3.0.0` | Web framework |
+| `pymupdf>=1.23.0` | PDF text extraction |
+| `pypdf>=3.17.0` | PDF fallback extractor |
+| `scikit-learn>=1.3.0` | TF-IDF vectorizer & cosine similarity |
+| `python-docx>=1.1.0` | DOCX support |
+| `reportlab>=4.0.0` | Synthetic resume generation |
+| `requests>=2.31.0` | URL resume fetching |
+
+### Optional: OCR for Scanned PDFs
+
+```bash
+# Install Python packages
+pip install pytesseract Pillow
+
+# Install Tesseract binary (Windows)
+# Download from: https://github.com/UB-Mannheim/tesseract/wiki
+# Add to PATH after install
+```
+
+---
+
+## API Reference
 
 ### `GET /`
-Renders the main web UI with the current count of indexed resumes.
+Returns the main SPA.
 
 ### `POST /api/search`
-Search and rank candidates by natural language query.
+Natural language candidate search.
 
-**Request Body (JSON):**
+**Request:**
 ```json
 {
-  "query": "Senior Python developer with AWS and Docker",
-  "skills": ["Python", "Docker"],
+  "query": "Python developer with 3+ years",
   "min_exp": 3.0,
   "min_degree": "Bachelor's"
 }
@@ -159,168 +136,225 @@ Search and rank candidates by natural language query.
 ```json
 {
   "success": true,
-  "count": 5,
+  "count": 8,
   "results": [
     {
-      "candidate": {
-        "name": "Alex Chen",
-        "title": "Senior Python Developer & AI Engineer",
-        "experience_years": 5.5,
-        "highest_degree": "Bachelor's",
-        "skills": ["Python", "FastAPI", "AWS", "Docker", "Kubernetes"],
-        "contact": {
-          "email": "alex.chen@email.com",
-          "phone": "(555) 234-5678",
-          "location": "San Francisco, CA"
+      "candidate": { "name": "...", "skills": [...], ... },
+      "suitability_score": 87.5,
+      "ranking_explanation": [
+        "Matches 4/4 required skills: Python, Django, AWS, Docker.",
+        "5.0 yrs experience meets the 3.0 yr requirement.",
+        "Bachelor's degree meets the Bachelor's requirement.",
+        "Resume text is highly relevant to the search query."
+      ],
+      "match_details": {
+        "matched_skills": ["Python", "Django"],
+        "missing_skills": ["Kubernetes"],
+        "skill_score_pct": 80.0,
+        "exp_score_pct": 100.0,
+        "edu_score_pct": 100.0,
+        "semantic_score_pct": 72.3,
+        "score_breakdown": {
+          "skill_contribution": 32.0,
+          "exp_contribution": 30.0,
+          "semantic_contribution": 14.5,
+          "edu_contribution": 10.0
         }
       },
-      "suitability_score": 95.2,
-      "match_details": {
-        "matched_skills": ["Python", "Docker", "AWS"],
-        "missing_skills": [],
-        "skill_score_pct": 100.0,
-        "exp_score_pct": 100.0
-      }
+      "outreach_draft": "Subject: ..."
     }
   ]
 }
 ```
 
-### `POST /api/upload`
-Upload a new PDF resume file (`multipart/form-data`, field: `file`).
+### `POST /api/match_jd`
+Match candidates against a full Job Description.
 
-### `POST /api/upload_url`
-Fetch and parse a PDF resume directly from a web document link or cloud URL (Google Drive, Dropbox, direct PDF link).
-
-**Request Body (JSON):**
+**Request:**
 ```json
-{
-  "url": "https://example.com/resume.pdf"
-}
+{ "jd_text": "We are looking for a Senior Python Engineer with 3+ years..." }
 ```
 
-### `POST /api/match_jd`
-Parses a full Job Description, extracts required skills, experience, and education, and ranks all candidates with a detailed skill gap analysis.
+**Response:** Same as `/api/search` + `jd_requirements` object.
 
-**Request Body (JSON):**
+### `POST /api/upload`
+Upload a resume file (PDF / DOCX / TXT).
+
+**Request:** `multipart/form-data` with `file` field.
+
+### `POST /api/upload_url`
+Fetch and index a resume from a URL.
+
+**Request:**
 ```json
-{
-  "jd_text": "Looking for a Senior Python Backend Developer with 3+ years experience in FastAPI, Docker, and AWS..."
-}
+{ "url": "https://drive.google.com/file/d/..." }
 ```
 
 ### `POST /api/update_status`
-Updates a candidate's pipeline status (`New`, `Shortlisted`, `Interview Scheduled`, `Archived`).
+Update pipeline stage for a candidate.
 
-**Request Body (JSON):**
+**Request:**
 ```json
-{
-  "id": "resume_01_alex_chen",
-  "status": "Shortlisted"
-}
+{ "id": "candidate_id", "status": "Shortlisted" }
 ```
-
-### `GET /api/candidates`
-Returns all indexed candidate profiles.
 
 ---
 
-## Suitability Scoring Model
+## Ranking Algorithm
 
-| Component | Weight | Description |
+The suitability score (0–100%) is a **weighted composite**:
+
+| Component | Weight | Signal |
 |---|---|---|
-| Skill Match | 40% | Fraction of required skills found in candidate profile |
-| Experience Match | 30% | Years of experience vs. required minimum |
-| Semantic Relevance | 20% | TF-IDF cosine similarity between query/JD and resume text |
-| Education Level | 10% | Degree level vs. required minimum |
+| **Skill Match** | 40% | Fraction of target skills found in resume |
+| **Experience Match** | 30% | Candidate years vs. required years |
+| **Semantic Relevance** | 20% | TF-IDF cosine similarity (bigrams) |
+| **Education Match** | 10% | Degree hierarchy vs. requirement |
 
-```
-score = (skill_match * 0.40) + (exp_match * 0.30) + (tfidf_similarity * 0.20) + (edu_match * 0.10)
-```
-
----
-
-## Advanced AI Technologies in HR & Document Intelligence (2026)
-
-This system is designed with modern AI principles and can be extended with the latest production AI technologies:
-
-1. **RAG & Dense Vector Embeddings:**
-   - Instead of sparse TF-IDF, dense vector embeddings (e.g., `text-embedding-3`, Gemini embeddings, BGE) capture deep semantic meaning (e.g., mapping "K8s" to "Kubernetes" or "GCP" to "Cloud infrastructure").
-   - Vector databases like Chroma, Pinecone, or FAISS enable instant semantic search across millions of candidate resumes.
-
-2. **LLM Structured Extraction (Zero-Shot JSON Schema):**
-   - Modern LLMs (Gemini 2.0 Flash, GPT-4o-mini) can extract deeply nested structured JSON conforming to strict schemas without brittle regex rules.
-
-3. **Multimodal Document AI:**
-   - Multimodal LLMs and models like LayoutLMv3 process 2-column visual resumes, infographics, and graphical portfolios directly without losing spatial context during raw text flattening.
-
-4. **Cross-Encoder Re-Ranking:**
-   - Two-stage retrieval pipelines retrieve candidates via fast vector search (Bi-Encoder), followed by a Cross-Encoder Re-Ranker (e.g., Cohere Rerank, BGE-Reranker) for high precision ranking.
-
-5. **Agentic Recruiter Workflows:**
-   - Autonomous AI agents conduct automated skill gap assessments, generate tailored technical screening questions, and draft contextual outreach emails.
+Every result includes a `ranking_explanation` — plain-English bullets like:
+- *"Matches 3/4 required skills: Python, Docker, AWS. Missing: Kubernetes."*
+- *"5.0 yrs experience meets the 3.0 yr requirement."*
+- *"Master's degree exceeds the Bachelor's requirement."*
 
 ---
 
-## Skills Taxonomy (100+ skills)
+## Sample Search Queries
 
-- **Languages:** Python, Java, JavaScript, TypeScript, C++, Go, Swift, Kotlin, Rust, SQL, Dart, Bash
-- **Frontend:** React, Next.js, Vue.js, Angular, HTML5, CSS3, Tailwind CSS, Redux, Sass
-- **Backend:** FastAPI, Django, Flask, Spring Boot, Express.js, Node.js, GraphQL, REST APIs, Microservices
-- **AI / ML:** PyTorch, TensorFlow, Scikit-Learn, Pandas, NumPy, HuggingFace, NLP, LLMs
-- **Cloud / DevOps:** AWS, Azure, GCP, Docker, Kubernetes, Terraform, Ansible, Jenkins, CI/CD
-- **Databases:** PostgreSQL, MySQL, MongoDB, Oracle DB, Redis, SQLite
-- **Security:** Cybersecurity, Wireshark, SIEM, Penetration Testing, OWASP
-- **Tools:** Git, Figma, Flutter, Firebase, JIRA, Tableau, PowerBI, Prometheus, Grafana
-
----
-
-## Sample Resumes Included
-
-| # | Candidate | Role |
-|---|---|---|
-| 1 | Alex Chen | Senior Python Developer & AI Engineer |
-| 2 | Maria Garcia | Full-Stack Software Engineer (Python & React) |
-| 3 | David Smith | Junior Data Analyst |
-| 4 | Priya Sharma | DevOps & Cloud Infrastructure Lead |
-| 5 | Jordan Lee | Senior Frontend Engineer |
-| 6 | Elena Rostova | Principal Backend Java & Spring Engineer |
-| 7 | Dr. Marcus Johnson | Senior Data Scientist & NLP Specialist |
-| 8 | Sarah Jenkins | Technical Product Manager & Agile Coach |
-| 9 | Liam O'Connor | Cross-Platform Mobile Engineer |
-| 10 | Zoe Patel | Cybersecurity & Automation Engineer |
+| Query | Expected Top Result |
+|---|---|
+| `Python developers with 3+ years experience` | Python engineer with 3+ yrs |
+| `DevOps engineer AWS Kubernetes Terraform` | Cloud/DevOps specialist |
+| `Data Scientist PyTorch NLP PhD` | PhD ML researcher |
+| `Full-Stack Python React Developer` | Full-stack engineer |
+| `Senior Backend Engineer FastAPI Docker` | Backend engineer with API exp |
 
 ---
 
-## Running Tests
+## Testing
 
 ```bash
-python -m unittest tests/test_system.py -v
+# Run all tests
+python -m pytest tests/ -v
+
+# Run evaluation (Precision@5, Recall@10, MRR)
+python evaluation/evaluation.py
 ```
 
-All 7 unit tests cover: parsing accuracy, field extraction, Python search ranking, DevOps ranking, PhD Data Science ranking, Job Description matching, and Blind Screening anonymous IDs.
+### Test Coverage
+
+| Test | Description |
+|---|---|
+| `test_parsed_count` | All 10 resumes parse without error |
+| `test_extraction_fields_present` | Name, email, skills, degree, exp extracted |
+| `test_anonymous_id_generation` | CAND-XXXX IDs are deterministic |
+| `test_summary_pitch_present` | Auto-generated recruiter pitch exists |
+| `test_skill_extraction_python` | Python/SQL/Django detected from text |
+| `test_skill_extraction_devops` | Docker/K8s/Terraform detected |
+| `test_skill_extraction_ml` | PyTorch/Scikit-Learn/NLP detected |
+| `test_experience_date_range_parsing` | Date ranges summed correctly |
+| `test_experience_stated_years` | "5 years of experience" → 5.0 |
+| `test_experience_present_keyword` | "Present" → current date |
+| `test_phone_indian_format` | +91 10-digit numbers extracted |
+| `test_phone_us_format` | (555) 123-4567 extracted |
+| `test_python_3plus_years_search` | Python 3+ yr query → Python dev at top |
+| `test_devops_search` | DevOps query → AWS/K8s candidate at top |
+| `test_phd_data_science_search` | PhD query → PhD candidate at top |
+| `test_ranking_explanation_present` | Explanation bullets in every result |
+| `test_score_breakdown_present` | 4 contributions sum to overall score |
+| `test_jd_matcher_and_skill_gaps` | JD extracts skills + returns gap analysis |
+| `test_minimum_experience_filter` | 10yr filter reduces result set |
+| `test_education_filter` | PhD filter puts PhD candidate at top |
 
 ---
 
-## Dependencies
+## Evaluation Metrics
+
+Run `python evaluation/evaluation.py` to get:
+
+- **Precision@5** — what fraction of top-5 results are relevant?
+- **Recall@10** — what fraction of all relevant candidates appear in top-10?
+- **MRR** — Mean Reciprocal Rank (1/rank of first relevant result)
+- **Parsing Accuracy** — % of resumes with email, phone, skills, degree, exp extracted
+
+---
+
+## AI Technologies Used
+
+### 1. TF-IDF with Bigrams (`scikit-learn`)
+Converts resume text into weighted term vectors. Bigram support captures phrases like "machine learning", "deep learning", "REST API" — improving semantic matching precision over single-token TF-IDF.
+
+### 2. Cosine Similarity Ranking
+Query and document vectors are compared using cosine distance in high-dimensional TF-IDF space. Candidates are ranked by how semantically close their full resume text is to the search query.
+
+### 3. OCR Pipeline (pytesseract + PyMuPDF)
+For scanned PDFs where digital text is unavailable: renders each page at 200 DPI using PyMuPDF, then applies Tesseract OCR. Enables parsing of physically-scanned resumes.
+
+### 4. Multi-Signal Scoring
+Rather than a single signal, the ranking uses a weighted combination of skill match, experience gap, semantic similarity, and degree hierarchy — making rankings more robust than keyword-only or TF-IDF-only approaches.
+
+### 5. Future: Dense Embeddings (Sentence Transformers)
+Replacing TF-IDF with models like `all-MiniLM-L6-v2` would capture semantic synonyms (e.g., "ML Engineer" ↔ "Machine Learning Engineer") without exact keyword match.
+
+### 6. Future: LLM-based Extraction
+GPT-4/Gemini structured output for extracting companies, roles, dates, and responsibilities with higher fidelity than regex — especially for creative or non-standard resume layouts.
+
+### 7. Future: Vector Database
+`ChromaDB` or `Pinecone` for ANN (approximate nearest neighbor) search over dense embeddings — enabling sub-millisecond search across millions of resumes.
+
+---
+
+## Project Structure
 
 ```
-Flask>=3.0.0
-reportlab>=4.0.0
-pymupdf>=1.23.0
-pypdf>=3.17.0
-scikit-learn>=1.3.0
-python-docx>=1.1.0
+RESUME_PARSER/
+├── api/
+│   └── index.py              # Flask app & API endpoints
+├── src/
+│   ├── parser.py             # Resume parser (PDF/DOCX/TXT/OCR)
+│   ├── search_engine.py      # Hybrid search & ranking engine
+│   ├── utils.py              # Skills taxonomy, degree patterns, regex
+│   └── generator.py          # Synthetic resume generator (ReportLab)
+├── templates/
+│   └── index.html            # Single-page app UI
+├── evaluation/
+│   └── evaluation.py         # Precision@5, Recall@10, MRR, parsing accuracy
+├── tests/
+│   └── test_system.py        # 20 unit & integration tests
+├── data/
+│   └── resumes/              # Synthetic PDF resumes
+├── ResumeParserUnlocked/     # Real resumes (gitignored)
+├── requirements.txt
+└── README.md
 ```
 
-Note: `streamlit` and `pandas` are needed only for `app.py` (Streamlit UI), not for Flask/Vercel deployment.
+---
+
+## Limitations
+
+| Limitation | Details |
+|---|---|
+| **Two-column PDFs** | PyMuPDF reads columns left-to-right linearly, mixing content. Needs layout analysis. |
+| **Name extraction** | Relies on first-line heuristics; may fail for image-heavy or creatively-formatted resumes. |
+| **OCR quality** | Tesseract accuracy drops for handwritten text, decorative fonts, or low-DPI scans. |
+| **In-memory storage** | Pipeline status is lost on server restart (no database persistence). |
+| **Skills taxonomy** | Fixed list of ~140 skills; niche or emerging skills may be missed. |
+| **No deduplication** | Uploading the same resume twice creates two separate entries. |
+
+---
+
+## Future Improvements
+
+- [ ] Dense embeddings with Sentence Transformers for semantic synonym matching
+- [ ] LLM-based structured extraction (roles, responsibilities, companies)
+- [ ] Vector database (ChromaDB) for scalable nearest-neighbor search
+- [ ] Better two-column PDF layout analysis using bounding box clustering
+- [ ] Persistent database (SQLite/PostgreSQL) for pipeline status and history
+- [ ] Resume preview/download (serve original file)
+- [ ] Multi-language support (French, Spanish, Hindi CVs)
+- [ ] Resume scoring feedback loop (recruiter thumbs up/down to tune weights)
 
 ---
 
 ## License
 
-MIT License -- see [LICENSE](LICENSE) for details.
-
----
-
-Built with Python, Flask, PyMuPDF, Scikit-Learn, and ReportLab.
+MIT

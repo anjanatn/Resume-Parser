@@ -3,757 +3,1181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Parser & Intelligent Search Engine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="description" content="AI Resume Parser & Intelligent Search Engine - Automated multi-format parsing, JD matching, and blind screening.">
+    <title>Resume Intelligence Platform</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        .gradient-header { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    /* ── Design System ── */
+    :root {
+        --bg-main:       #f8fafc;
+        --bg-surface:    #ffffff;
+        --bg-subtle:     #f1f5f9;
+        --bg-hover:      #e2e8f0;
+
+        --text-main:     #0f172a;
+        --text-muted:    #475569;
+        --text-subtle:   #64748b;
+
+        --border-light:  #e2e8f0;
+        --border-medium: #cbd5e1;
+
+        --brand:         #2563eb;
+        --brand-hover:   #1d4ed8;
+        --brand-accent:  #0284c7;
+        --brand-light:   #eff6ff;
+
+        --green-bg:      #f0fdf4; --green-border: #86efac; --green-text: #15803d;
+        --amber-bg:      #fffbeb; --amber-border: #fcd34d; --amber-text: #b45309;
+        --red-bg:        #fef2f2; --red-border:   #fca5a5; --red-text:   #b91c1c;
+
+        --shadow-sm:  0 1px 2px 0 rgba(0,0,0,.05);
+        --shadow-md:  0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+        --shadow-lg:  0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
+        --radius-sm:  6px;
+        --radius-md:  10px;
+        --radius-lg:  14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: var(--bg-main);
+        color: var(--text-main);
+        line-height: 1.5;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── APP HEADER ── */
+    .app-header {
+        background: #0f172a;
+        color: #fff;
+        padding: 0 24px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #1e293b;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+    .brand-group { display: flex; align-items: center; gap: 16px; }
+    .brand-logo {
+        display: flex; align-items: center; gap: 10px;
+        text-decoration: none; color: #fff;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 800; font-size: 17px; letter-spacing: -.02em;
+    }
+    .brand-badge {
+        width: 32px; height: 32px;
+        background: linear-gradient(135deg, #2563eb, #0284c7);
+        color: #fff; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 13px;
+    }
+    .project-pill {
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 9999px;
+        padding: 4px 12px; font-size: 12px; color: #94a3b8;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .project-pill strong { color: #f8fafc; }
+    .live-dot-wrap {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; color: #38bdf8;
+        background: rgba(56,189,248,.1);
+        padding: 4px 10px; border-radius: 9999px;
+        border: 1px solid rgba(56,189,248,.2);
+    }
+    .pulse-dot {
+        width: 7px; height: 7px;
+        background: #38bdf8; border-radius: 50%;
+        box-shadow: 0 0 8px #38bdf8;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{ opacity:.4; } 50%{ opacity:1; } }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .hdr-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 13px; border-radius: var(--radius-sm);
+        font-size: 12px; font-weight: 600; cursor: pointer;
+        border: 1px solid transparent; transition: all .15s ease;
+    }
+    .hdr-btn-ghost {
+        background: rgba(255,255,255,.08);
+        color: #e2e8f0; border-color: rgba(255,255,255,.15);
+    }
+    .hdr-btn-ghost:hover { background: rgba(255,255,255,.16); color: #fff; }
+    .hdr-btn-primary { background: var(--brand); color: #fff; }
+    .hdr-btn-primary:hover { background: var(--brand-hover); }
+    .hdr-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── SUB-NAV ── */
+    .sub-nav {
+        background: #1e293b;
+        padding: 0 12px;
+        display: flex; align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #334155;
+        flex-wrap: wrap; gap: 0;
+    }
+    .nav-tabs { display: flex; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+        flex-shrink: 0; background: none; border: none;
+        color: #94a3b8; padding: 12px 16px;
+        font-size: 13px; font-weight: 500; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+        border-bottom: 2px solid transparent;
+        transition: all .15s ease; white-space: nowrap;
+    }
+    .nav-tab:hover { color: #f1f5f9; }
+    .nav-tab.active { color: #fff; font-weight: 600; border-bottom-color: var(--brand); }
+    .tab-badge {
+        background: rgba(255,255,255,.12); color: #cbd5e1;
+        padding: 2px 8px; border-radius: 9999px;
+        font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-tab.active .tab-badge { background: var(--brand); color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+
+    /* ── LAYOUT ── */
+    .app-shell { display: flex; min-height: calc(100vh - 106px); }
+    .sidebar {
+        width: 280px; flex-shrink: 0;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border-light);
+        padding: 20px 16px;
+        display: flex; flex-direction: column; gap: 16px;
+        overflow-y: auto; max-height: calc(100vh - 106px);
+        position: sticky; top: 106px;
+    }
+    .main-content { flex: 1; padding: 24px; min-width: 0; }
+
+    /* ── SIDEBAR SECTIONS ── */
+    .sidebar-section {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        box-shadow: var(--shadow-sm);
+    }
+    .sidebar-title {
+        font-size: 12px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .05em; color: var(--text-subtle);
+        margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .sidebar-title i { color: var(--brand); font-size: 11px; }
+
+    /* Upload tabs */
+    .upload-tabs { display: flex; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-medium); margin-bottom: 12px; }
+    .upload-tab { flex: 1; padding: 6px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; border: none; transition: all .15s; }
+    .upload-tab.active { background: var(--brand); color: #fff; }
+    .upload-tab:not(.active) { background: var(--bg-subtle); color: var(--text-muted); }
+    .upload-tab:not(.active):hover { background: var(--bg-hover); }
+
+    /* Drop zone */
+    .drop-zone {
+        border: 2px dashed #93c5fd;
+        border-radius: var(--radius-md);
+        padding: 20px 12px; text-align: center;
+        background: var(--brand-light); cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+    .drop-zone:hover { border-color: var(--brand); background: #dbeafe; }
+    .drop-zone i { font-size: 22px; color: var(--brand); display: block; margin-bottom: 6px; }
+    .drop-zone p { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+    /* Form controls */
+    .form-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-subtle); margin-bottom: 5px; }
+    .form-select {
+        width: 100%; padding: 8px 10px;
+        border: 1px solid var(--border-medium); border-radius: var(--radius-sm);
+        font-size: 12px; background: var(--bg-surface); color: var(--text-main);
+        outline: none; cursor: pointer;
+    }
+    .form-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .form-input {
+        width: 100%; padding: 8px 10px;
+        border: 1px solid var(--border-medium); border-radius: var(--radius-sm);
+        font-size: 12px; background: var(--bg-surface); color: var(--text-main);
+        outline: none;
+    }
+    .form-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .form-group { margin-bottom: 12px; }
+
+    /* Range slider */
+    .range-row { display: flex; align-items: center; gap: 8px; }
+    .range-row input[type=range] { flex: 1; accent-color: var(--brand); height: 4px; }
+    .range-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--brand); min-width: 36px; text-align: right; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all .15s ease; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-hover); }
+    .btn-secondary { background: var(--bg-subtle); color: var(--text-main); border-color: var(--border-medium); }
+    .btn-secondary:hover { background: var(--bg-hover); }
+    .btn-outline { background: var(--bg-surface); color: var(--text-main); border-color: var(--border-medium); }
+    .btn-outline:hover { background: var(--bg-subtle); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-full { width: 100%; }
+
+    /* Export grid */
+    .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── KPI ROW ── */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .kpi-card {
+        background: var(--bg-surface); border: 1px solid var(--border-light);
+        border-radius: var(--radius-md); padding: 16px;
+        box-shadow: var(--shadow-sm);
+    }
+    .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-subtle); margin-bottom: 6px; }
+    .kpi-value { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-main); line-height: 1.1; }
+    .kpi-value.brand  { color: var(--brand); }
+    .kpi-value.green  { color: var(--green-text); }
+    .kpi-value.amber  { color: var(--amber-text); }
+    .kpi-value.red    { color: var(--red-text); }
+    .kpi-sub { font-size: 11px; color: var(--text-subtle); margin-top: 4px; }
+
+    /* ── SEARCH PANEL ── */
+    .search-panel {
+        background: var(--bg-surface); border: 1px solid var(--border-light);
+        border-radius: var(--radius-md); padding: 20px;
+        box-shadow: var(--shadow-sm); margin-bottom: 20px;
+    }
+    .panel-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; }
+
+    .search-row { display: flex; gap: 10px; }
+    .search-input-wrap { position: relative; flex: 1; }
+    .search-input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); font-size: 13px; }
+    .search-input {
+        width: 100%; padding: 10px 12px 10px 36px;
+        border: 1px solid var(--border-medium); border-radius: var(--radius-sm);
+        font-size: 13px; background: var(--bg-subtle); color: var(--text-main);
+        outline: none; transition: border-color .15s;
+    }
+    .search-input:focus { border-color: var(--brand); background: var(--bg-surface); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+    .chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+    .chip-label { font-size: 11px; font-weight: 600; color: var(--text-subtle); }
+    .chip {
+        background: var(--brand-light); color: var(--brand);
+        border: 1px solid #bfdbfe; border-radius: 9999px;
+        padding: 3px 10px; font-size: 11px; font-weight: 600;
+        cursor: pointer; transition: all .15s;
+    }
+    .chip:hover { background: #dbeafe; }
+
+    /* JD Panel */
+    .jd-panel { display: none; }
+    .jd-panel.active { display: block; }
+    .jd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .jd-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-subtle); }
+    .jd-sample-btn { font-size: 12px; font-weight: 600; color: var(--brand); background: none; border: none; cursor: pointer; }
+    .jd-sample-btn:hover { text-decoration: underline; }
+    .jd-textarea {
+        width: 100%; padding: 10px 12px;
+        border: 1px solid var(--border-medium); border-radius: var(--radius-sm);
+        font-family: 'JetBrains Mono', monospace; font-size: 12px;
+        background: var(--bg-subtle); color: var(--text-main);
+        outline: none; resize: vertical; margin-bottom: 10px;
+        transition: border-color .15s;
+    }
+    .jd-textarea:focus { border-color: var(--brand); background: var(--bg-surface); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .jd-banner { display: none; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-sm); padding: 12px; margin-top: 12px; font-size: 12px; }
+    .jd-banner.visible { display: block; }
+    .jd-banner-title { font-weight: 700; color: #3730a3; margin-bottom: 4px; }
+    .skill-tag { display: inline-block; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin: 2px 2px 0 0; }
+
+    /* ── RESULTS ── */
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .results-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    .results-badge {
+        background: var(--bg-subtle); border: 1px solid var(--border-light);
+        border-radius: 9999px; padding: 3px 12px;
+        font-size: 11px; font-weight: 700; color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Candidate card */
+    .candidate-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-left: 4px solid var(--brand);
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+        display: flex; gap: 16px;
+        margin-bottom: 12px;
+        transition: box-shadow .15s, transform .15s;
+    }
+    .candidate-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .candidate-card.score-high { border-left-color: var(--green-text); }
+    .candidate-card.score-mid  { border-left-color: var(--brand); }
+    .candidate-card.score-low  { border-left-color: var(--amber-text); }
+
+    .card-checkbox { margin-top: 4px; accent-color: var(--brand); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-top { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .rank-badge { background: #0f172a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; margin-top: 2px; }
+    .cand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800; color: var(--text-main); }
+    .cand-title { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .cand-pitch { font-size: 12px; color: var(--brand-accent); font-weight: 500; margin-bottom: 6px; }
+    .cand-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--text-subtle); font-weight: 500; margin-bottom: 8px; }
+    .cand-meta i { color: var(--brand); margin-right: 3px; }
+    .cand-stats { display: flex; gap: 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; }
+    .cand-stats i { color: var(--brand); margin-right: 3px; }
+
+    /* Skill chips */
+    .skill-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .skill-chip { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; display: inline-block; }
+    .skill-chip.matched { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
+    .skill-chip.normal  { background: var(--bg-subtle); border-color: var(--border-light); color: var(--text-muted); }
+
+    /* Score sidebar */
+    .card-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; min-width: 180px; flex-shrink: 0; }
+    .score-pill { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800; padding: 5px 14px; border-radius: 9999px; border: 1px solid; }
+    .score-pill.high { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
+    .score-pill.mid  { background: var(--brand-light); border-color: #bfdbfe; color: var(--brand); }
+    .score-pill.low  { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber-text); }
+
+    /* Score bar */
+    .score-bar-wrap { width: 100%; margin-top: 6px; }
+    .score-bar-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-subtle); font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+    .bar-bg { height: 6px; background: var(--bg-subtle); border-radius: 9999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 9999px; background: var(--brand); transition: width .4s ease; }
+    .bar-fill.green { background: var(--green-text); }
+    .bar-fill.amber { background: var(--amber-text); }
+
+    /* Pipeline status dropdown */
+    .pipeline-select {
+        width: 100%; padding: 6px 8px; margin-top: 10px;
+        border: 1px solid var(--border-medium); border-radius: var(--radius-sm);
+        font-size: 11px; font-weight: 600; color: var(--text-main);
+        background: var(--bg-subtle); outline: none; cursor: pointer;
+    }
+    .pipeline-select:focus { border-color: var(--brand); }
+
+    /* Card actions */
+    .card-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid; transition: all .15s; }
+    .action-btn.email { background: var(--brand-light); border-color: #bfdbfe; color: var(--brand); }
+    .action-btn.email:hover { background: #dbeafe; }
+    .action-btn.profile { background: var(--bg-subtle); border-color: var(--border-medium); color: var(--text-muted); }
+    .action-btn.profile:hover { background: var(--bg-hover); color: var(--text-main); }
+
+    /* Empty state */
+    .empty-state { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 48px 24px; text-align: center; color: var(--text-subtle); }
+    .empty-state i { font-size: 32px; margin-bottom: 10px; display: block; opacity: .4; }
+    .loading-state { text-align: center; padding: 48px 24px; color: var(--text-subtle); }
+    .loading-state i { font-size: 28px; display: block; margin-bottom: 10px; color: var(--brand); }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(15,23,42,.55);
+        backdrop-filter: blur(3px); z-index: 100;
+        opacity: 0; pointer-events: none; transition: opacity .2s ease;
+        display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+        background: var(--bg-surface); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg); width: 100%;
+        transform: translateY(16px); transition: transform .25s cubic-bezier(.16,1,.3,1);
+        display: flex; flex-direction: column;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 22px; border-bottom: 1px solid var(--border-light);
+    }
+    .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    .modal-title i { color: var(--brand); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-subtle); transition: color .15s; }
+    .modal-close:hover { color: var(--text-main); }
+    .modal-body { padding: 22px; overflow-y: auto; flex: 1; }
+
+    /* Profile modal detail grid */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; }
+    .detail-item { display: flex; flex-direction: column; gap: 2px; }
+    .detail-label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-subtle); font-weight: 700; }
+    .detail-val { font-size: 13px; font-weight: 600; color: var(--text-main); }
+
+    /* Comparison */
+    .compare-cols { display: flex; gap: 16px; min-width: max-content; }
+    .compare-col { flex: 1; min-width: 240px; background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 16px; }
+    .compare-col-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+    .compare-col-title { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .compare-score { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 10px; }
+    .compare-row { font-size: 12px; margin-bottom: 5px; }
+    .compare-row b { color: var(--text-main); }
+
+    /* Email textarea */
+    .email-textarea {
+        width: 100%; padding: 12px;
+        background: #0f172a; color: #e2e8f0;
+        border: 1px solid #334155; border-radius: var(--radius-sm);
+        font-family: 'JetBrains Mono', monospace; font-size: 12px;
+        resize: vertical; outline: none;
+    }
+
+    /* Raw text */
+    .raw-text { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: var(--radius-sm); font-family: 'JetBrains Mono', monospace; font-size: 11px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; }
+
+    /* Upload status */
+    .upload-status { font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted); min-height: 16px; }
+    .upload-status.ok { color: var(--green-text); }
+    .upload-status.err { color: var(--red-text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) {
+        .app-shell { flex-direction: column; }
+        .sidebar { width: 100%; max-height: none; position: static; flex-direction: row; flex-wrap: wrap; }
+        .sidebar-section { flex: 1; min-width: 200px; }
+    }
+    @media (max-width: 700px) {
+        .app-header { height: auto; flex-direction: column; padding: 12px 16px; gap: 8px; }
+        .kpi-row { grid-template-columns: 1fr 1fr; }
+        .candidate-card { flex-direction: column; }
+        .card-side { min-width: 0; width: 100%; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .project-pill { display: none; }
+        .search-row { flex-direction: column; }
+    }
+    @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } .detail-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
 
-    <!-- Header -->
-    <header class="gradient-header text-white py-5 px-4 sm:px-8 shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black tracking-tight flex items-center gap-2.5">
-                    <i class="fa-solid fa-file-invoice"></i> AI Resume Parser &amp; Search Engine
-                </h1>
-                <p class="text-blue-100 text-xs mt-0.5">
-                    Automated Multi-Format Parsing, Job Description Matching &amp; Blind Screening
-                </p>
-            </div>
+<body>
 
-            <!-- Controls -->
-            <div class="flex items-center flex-wrap gap-2.5">
-                <!-- Blind Screening Toggle -->
-                <label class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm border border-white/20 cursor-pointer select-none text-xs font-semibold">
-                    <input type="checkbox" id="blindScreeningToggle" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-500">
-                    <span><i class="fa-solid fa-user-secret mr-1"></i> Blind Screening Mode</span>
-                </label>
-
-                <!-- Compare Selected Button -->
-                <button id="compareBtn" onclick="openComparisonModal()" disabled
-                    class="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-code-compare"></i> Compare (<span id="compareCount">0</span>/3)
-                </button>
-
-                <!-- Indexed Count Badge -->
-                <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm border border-white/20 text-xs">
-                    <i class="fa-solid fa-database text-blue-200"></i>
-                    <span id="indexedCount" class="font-bold text-white">{{ candidate_count }} Profiles</span>
-                </div>
-            </div>
+<!-- ═══ APP HEADER ═══ -->
+<header class="app-header">
+    <div class="brand-group">
+        <a href="/" class="brand-logo">
+            <div class="brand-badge">RP</div>
+            Resume Intelligence
+        </a>
+        <div class="project-pill">
+            <i class="fa-solid fa-circle-dot" style="color:#38bdf8;font-size:8px"></i>
+            <strong>Resume Parser</strong> &mdash; v2.0
         </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-        <!-- Sidebar -->
-        <aside class="lg:col-span-1 space-y-5">
-
-            <!-- Upload Card -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <h2 class="text-sm font-bold text-gray-900 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up text-blue-600"></i> Ingest Resumes</span>
-                    <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">PDF, DOCX, TXT</span>
-                </h2>
-
-                <!-- Switcher -->
-                <div class="flex rounded-lg overflow-hidden border border-gray-200 mb-3 text-xs font-semibold">
-                    <button id="tabFile" onclick="switchUploadTab('file')" class="flex-1 py-1.5 bg-blue-600 text-white transition text-center">File</button>
-                    <button id="tabUrl" onclick="switchUploadTab('url')" class="flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center">Document Link</button>
-                </div>
-
-                <!-- File Panel -->
-                <div id="panelFile">
-                    <div id="dropZone" class="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl p-5 text-center bg-blue-50/40 cursor-pointer transition">
-                        <i class="fa-solid fa-file-arrow-up text-2xl text-blue-500 mb-2 block"></i>
-                        <p class="text-xs text-gray-600 font-medium">Click or drag &amp; drop PDF/DOCX/TXT resume</p>
-                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="hidden">
-                    </div>
-                </div>
-
-                <!-- URL Panel -->
-                <div id="panelUrl" class="hidden">
-                    <p class="text-[11px] text-gray-500 mb-2">Google Drive, Dropbox, or direct PDF link:</p>
-                    <input type="url" id="urlInput" placeholder="https://drive.google.com/file/d/..."
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:ring-2 focus:ring-blue-500 mb-2" />
-                    <button id="fetchUrlBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-link"></i> Fetch &amp; Index
-                    </button>
-                </div>
-
-                <div id="uploadStatus" class="mt-2 text-xs font-medium text-gray-600"></div>
-            </div>
-
-            <!-- Filters -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <h2 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-600"></i> Faceted Candidate Filters
-                </h2>
-
-                <div class="mb-3.5">
-                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Pipeline Stage</label>
-                    <select id="statusFilter" onchange="filterResultsByPipeline()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg p-2 focus:ring-blue-500">
-                        <option value="All">All Pipeline Stages</option>
-                        <option value="New">New</option>
-                        <option value="Shortlisted">Shortlisted</option>
-                        <option value="Interview Scheduled">Interview Scheduled</option>
-                        <option value="Archived">Archived</option>
-                    </select>
-                </div>
-
-                <div class="mb-3.5">
-                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Minimum Experience</label>
-                    <div class="flex items-center gap-2">
-                        <input type="range" id="expSlider" min="0" max="10" step="0.5" value="0" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                        <span id="expVal" class="text-xs font-bold text-blue-600 w-12 text-right">0 Yrs</span>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Education Level</label>
-                    <select id="degreeSelect" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg p-2 focus:ring-blue-500">
-                        <option value="Any">Any Degree</option>
-                        <option value="Bachelor's">Bachelor's Degree+</option>
-                        <option value="Master's">Master's Degree+</option>
-                        <option value="PhD">PhD Degree</option>
-                    </select>
-                </div>
-
-                <button id="resetFiltersBtn" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-rotate-right"></i> Reset All Filters
-                </button>
-            </div>
-
-            <!-- Export -->
-            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-xs">
-                <h3 class="font-bold text-blue-900 mb-1 flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-export text-blue-600"></i> Recruiter Export
-                </h3>
-                <p class="text-gray-600 mb-3 text-[11px]">Download candidate roster or shortlisted applicants for HR reviews.</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="exportData('csv')" class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1.5 px-2 rounded-lg border border-gray-300 text-center transition">
-                        <i class="fa-solid fa-file-csv text-emerald-600"></i> CSV Table
-                    </button>
-                    <button onclick="exportData('json')" class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-1.5 px-2 rounded-lg border border-gray-300 text-center transition">
-                        <i class="fa-solid fa-code text-blue-600"></i> JSON Roster
-                    </button>
-                </div>
-            </div>
-
-        </aside>
-
-        <!-- Main Content -->
-        <section class="lg:col-span-3 space-y-4">
-
-            <!-- Primary Mode Tabs -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="flex border-b border-gray-200 text-sm font-semibold">
-                    <button id="modeTabSearch" onclick="switchMode('search')"
-                        class="flex-1 py-3 px-4 text-center border-b-2 border-blue-600 text-blue-700 font-bold flex items-center justify-center gap-2 transition">
-                        <i class="fa-solid fa-magnifying-glass"></i> Natural Language Search
-                    </button>
-                    <button id="modeTabJD" onclick="switchMode('jd')"
-                        class="flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition">
-                        <i class="fa-solid fa-briefcase"></i> Job Description (JD) Auto-Matcher
-                    </button>
-                </div>
-
-                <!-- Panel 1: Natural Search -->
-                <div id="panelSearch" class="p-5">
-                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1.5">Enter Candidate Search Query</label>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <div class="relative flex-1">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 text-sm"></i>
-                            <input type="text" id="queryInput" value="Python developers with 3+ years experience"
-                                placeholder="e.g. Senior DevOps engineer with AWS & Kubernetes..."
-                                class="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 font-medium">
-                        </div>
-                        <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-md">
-                            <i class="fa-solid fa-paper-plane"></i> Search Candidates
-                        </button>
-                    </div>
-
-                    <!-- Chips -->
-                    <div class="mt-3 flex flex-wrap items-center gap-1.5">
-                        <span class="text-[11px] font-semibold text-gray-500 mr-1">Quick Search:</span>
-                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Python developers with 3+ years experience">Python Devs (3+ yrs)</button>
-                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="DevOps engineer AWS Kubernetes Terraform">DevOps &amp; AWS</button>
-                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Data Scientist PyTorch PhD">Data Science PhD</button>
-                        <button class="chip-btn bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-200 transition" data-query="Full-Stack Python React Developer">Full-Stack React</button>
-                    </div>
-                </div>
-
-                <!-- Panel 2: Job Description Matcher -->
-                <div id="panelJD" class="p-5 hidden space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-[11px] font-bold text-gray-700 uppercase">Paste Complete Job Description</label>
-                        <button onclick="loadSampleJD()" class="text-xs text-blue-600 font-semibold hover:underline">
-                            <i class="fa-solid fa-paste"></i> Load Sample Senior Python JD
-                        </button>
-                    </div>
-                    <textarea id="jdInput" rows="4"
-                        placeholder="Paste job posting text here (e.g. We are looking for a Senior Backend Developer with 3+ years in Python, FastAPI, Docker, and AWS...)"
-                        class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500"></textarea>
-                    
-                    <button onclick="matchJobDescription()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-solid fa-bolt"></i> Match Candidates &amp; Analyze Skill Gaps
-                    </button>
-
-                    <!-- Extracted JD Banner -->
-                    <div id="jdRequirementsBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-xs">
-                        <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
-                            <i class="fa-solid fa-check-double text-indigo-600"></i> Auto-Extracted Job Requirements:
-                        </h4>
-                        <div id="jdRequirementsContent" class="text-gray-700 space-y-1"></div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Results Header -->
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <i class="fa-solid fa-ranking-star text-amber-500"></i> Ranked Candidates by Suitability
-                </h3>
-                <span id="resultsCount" class="text-xs font-bold text-gray-600 uppercase bg-gray-200 px-3 py-1 rounded-full">0 Candidates</span>
-            </div>
-
-            <!-- Candidates List -->
-            <div id="resultsContainer" class="space-y-3.5"></div>
-
-        </section>
-
-    </main>
-
-    <!-- Comparison Modal -->
-    <div id="compareModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-                <h3 class="text-xl font-black text-gray-900 flex items-center gap-2">
-                    <i class="fa-solid fa-code-compare text-blue-600"></i> Side-by-Side Candidate Comparison
-                </h3>
-                <button onclick="closeComparisonModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
-            </div>
-            <div id="compareContent" class="overflow-x-auto"></div>
+        <div class="live-dot-wrap">
+            <div class="pulse-dot"></div>
+            Live
         </div>
     </div>
 
-    <!-- Outreach Email Modal -->
-    <div id="outreachModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between border-b pb-3 mb-3">
-                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <i class="fa-solid fa-envelope-open-text text-blue-600"></i> Personalized Recruiter Outreach Email
-                </h3>
-                <button onclick="closeOutreachModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    <div class="header-actions">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;color:#e2e8f0;font-size:12px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:7px 13px;">
+            <input type="checkbox" id="blindScreeningToggle" style="accent-color:#2563eb;width:14px;height:14px;">
+            <i class="fa-solid fa-user-secret"></i> Blind Mode
+        </label>
+        <button id="compareBtn" onclick="openComparisonModal()" disabled class="hdr-btn hdr-btn-ghost">
+            <i class="fa-solid fa-code-compare"></i> Compare (<span id="compareCount">0</span>/3)
+        </button>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:7px 13px;font-size:12px;font-weight:600;color:#e2e8f0;">
+            <i class="fa-solid fa-database" style="color:#7dd3fc;"></i>
+            <span id="indexedCount">{{ candidate_count }} Profiles</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══ SUB-NAV ═══ -->
+<nav class="sub-nav">
+    <div class="nav-tabs">
+        <button class="nav-tab active" id="modeTabSearch" onclick="switchMode('search')">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Natural Language Search
+            <span class="tab-badge" id="searchBadge">0</span>
+        </button>
+        <button class="nav-tab" id="modeTabJD" onclick="switchMode('jd')">
+            <i class="fa-solid fa-briefcase"></i>
+            JD Auto-Matcher
+            <span class="tab-badge" id="jdBadge">-</span>
+        </button>
+    </div>
+    <div class="nav-right">
+        <button onclick="exportData('csv')" class="hdr-btn hdr-btn-ghost btn-sm">
+            <i class="fa-solid fa-file-csv" style="color:#34d399"></i> CSV
+        </button>
+        <button onclick="exportData('json')" class="hdr-btn hdr-btn-ghost btn-sm">
+            <i class="fa-solid fa-code" style="color:#7dd3fc"></i> JSON
+        </button>
+    </div>
+</nav>
+
+<!-- ═══ APP SHELL ═══ -->
+<div class="app-shell">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+
+        <!-- Upload -->
+        <div class="sidebar-section">
+            <div class="sidebar-title"><i class="fa-solid fa-cloud-arrow-up"></i> Ingest Resume</div>
+            <div class="upload-tabs">
+                <button id="tabFile" class="upload-tab active" onclick="switchUploadTab('file')">File</button>
+                <button id="tabUrl"  class="upload-tab"        onclick="switchUploadTab('url')">Doc Link</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Pre-drafted based on candidate's matching skills, background, and target role.</p>
-            <textarea id="outreachEmailText" rows="10" class="w-full p-3 bg-gray-900 text-gray-100 rounded-xl font-mono text-xs mb-3"></textarea>
-            <div class="flex justify-end gap-2">
-                <button onclick="copyOutreachEmail()" id="copyEmailBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center gap-1.5">
+            <div id="panelFile">
+                <div id="dropZone" class="drop-zone">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <p>Click or drag &amp; drop PDF / DOCX / TXT</p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="hidden" style="display:none">
+                </div>
+            </div>
+            <div id="panelUrl" style="display:none">
+                <p style="font-size:11px;color:var(--text-subtle);margin-bottom:6px;">Google Drive, Dropbox, or direct link:</p>
+                <input type="url" id="urlInput" class="form-input" placeholder="https://drive.google.com/file/d/..." style="margin-bottom:7px;">
+                <button id="fetchUrlBtn" class="btn btn-primary btn-full btn-sm">
+                    <i class="fa-solid fa-link"></i> Fetch &amp; Index
+                </button>
+            </div>
+            <div id="uploadStatus" class="upload-status"></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="sidebar-section">
+            <div class="sidebar-title"><i class="fa-solid fa-sliders"></i> Candidate Filters</div>
+            <div class="form-group">
+                <label class="form-label">Pipeline Stage</label>
+                <select id="statusFilter" class="form-select" onchange="filterResultsByPipeline()">
+                    <option value="All">All Stages</option>
+                    <option value="New">New</option>
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Interview Scheduled">Interview Scheduled</option>
+                    <option value="Archived">Archived</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Min Experience</label>
+                <div class="range-row">
+                    <input type="range" id="expSlider" min="0" max="10" step="0.5" value="0">
+                    <span id="expVal" class="range-val">0 Yrs</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Education Level</label>
+                <select id="degreeSelect" class="form-select">
+                    <option value="Any">Any Degree</option>
+                    <option value="Bachelor's">Bachelor's+</option>
+                    <option value="Master's">Master's+</option>
+                    <option value="PhD">PhD</option>
+                </select>
+            </div>
+            <button id="resetFiltersBtn" class="btn btn-secondary btn-full btn-sm">
+                <i class="fa-solid fa-rotate-right"></i> Reset Filters
+            </button>
+        </div>
+
+        <!-- Export -->
+        <div class="sidebar-section" style="background:var(--brand-light);border-color:#bfdbfe;">
+            <div class="sidebar-title" style="color:#1e40af;"><i class="fa-solid fa-file-export" style="color:var(--brand)"></i> Recruiter Export</div>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Download candidate roster for HR review.</p>
+            <div class="export-grid">
+                <button onclick="exportData('csv')" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-csv" style="color:#10b981"></i> CSV</button>
+                <button onclick="exportData('json')" class="btn btn-outline btn-sm"><i class="fa-solid fa-code" style="color:var(--brand)"></i> JSON</button>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main-content">
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Indexed</div>
+                <div class="kpi-value brand" id="kpiTotal">{{ candidate_count }}</div>
+                <div class="kpi-sub">Profiles in database</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Results Found</div>
+                <div class="kpi-value" id="kpiResults">0</div>
+                <div class="kpi-sub">From last search</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Avg Match Score</div>
+                <div class="kpi-value green" id="kpiAvgScore">-</div>
+                <div class="kpi-sub">Suitability percentage</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Top Score</div>
+                <div class="kpi-value brand" id="kpiTopScore">-</div>
+                <div class="kpi-sub">Best candidate match</div>
+            </div>
+        </div>
+
+        <!-- Search / JD Panel -->
+        <div class="search-panel">
+            <!-- Natural Language Panel -->
+            <div id="panelSearch">
+                <div class="panel-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--brand)"></i> Natural Language Search</div>
+                <div class="search-row">
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="queryInput" class="search-input"
+                            value="Python developers with 3+ years experience"
+                            placeholder="e.g. Senior DevOps engineer with AWS and Kubernetes...">
+                    </div>
+                    <button id="searchBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i> Search
+                    </button>
+                </div>
+                <div class="chip-row">
+                    <span class="chip-label">Quick:</span>
+                    <button class="chip" data-query="Python developers with 3+ years experience">Python Devs 3+yr</button>
+                    <button class="chip" data-query="DevOps engineer AWS Kubernetes Terraform">DevOps &amp; AWS</button>
+                    <button class="chip" data-query="Data Scientist PyTorch PhD">Data Science PhD</button>
+                    <button class="chip" data-query="Full-Stack Python React Developer">Full-Stack React</button>
+                </div>
+            </div>
+
+            <!-- JD Matcher Panel -->
+            <div id="panelJD" class="jd-panel">
+                <div class="panel-title"><i class="fa-solid fa-briefcase" style="color:var(--brand)"></i> Job Description Auto-Matcher</div>
+                <div class="jd-header">
+                    <span class="jd-label">Paste Complete Job Description</span>
+                    <button class="jd-sample-btn" onclick="loadSampleJD()"><i class="fa-solid fa-paste"></i> Load Sample JD</button>
+                </div>
+                <textarea id="jdInput" class="jd-textarea" rows="5"
+                    placeholder="Paste job posting text here (e.g. We are looking for a Senior Backend Developer with 3+ years in Python, FastAPI, Docker, and AWS...)"></textarea>
+                <button onclick="matchJobDescription()" class="btn btn-primary">
+                    <i class="fa-solid fa-bolt"></i> Match Candidates &amp; Analyze Skill Gaps
+                </button>
+                <div id="jdRequirementsBanner" class="jd-banner">
+                    <div class="jd-banner-title"><i class="fa-solid fa-check-double"></i> Auto-Extracted Requirements</div>
+                    <div id="jdRequirementsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-header">
+            <div class="results-title">
+                <i class="fa-solid fa-ranking-star" style="color:#f59e0b"></i>
+                Ranked Candidates
+            </div>
+            <span id="resultsCount" class="results-badge">0 results</span>
+        </div>
+
+        <div id="resultsContainer">
+            <div class="empty-state">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Use the search bar above to rank candidates by suitability.
+            </div>
+        </div>
+
+    </main>
+</div>
+
+
+<!-- ═══ COMPARISON MODAL ═══ -->
+<div id="compareModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:900px;max-height:90vh;">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-code-compare"></i> Side-by-Side Comparison</div>
+            <button class="modal-close" onclick="closeComparisonModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-x:auto;">
+            <div id="compareContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ OUTREACH EMAIL MODAL ═══ -->
+<div id="outreachModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:640px;max-height:85vh;">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-envelope-open-text"></i> Personalized Outreach Email</div>
+            <button class="modal-close" onclick="closeOutreachModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:12px;color:var(--text-subtle);margin-bottom:10px;">Pre-drafted based on candidate skills, background, and target role.</p>
+            <textarea id="outreachEmailText" class="email-textarea" rows="11"></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                <button onclick="copyOutreachEmail()" id="copyEmailBtn" class="btn btn-primary btn-sm">
                     <i class="fa-regular fa-copy"></i> Copy to Clipboard
                 </button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Profile Detail Modal -->
-    <div id="candidateModal" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative">
-            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+<!-- ═══ PROFILE DETAIL MODAL ═══ -->
+<div id="candidateModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:760px;max-height:88vh;">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-id-card"></i> Candidate Profile</div>
+            <button class="modal-close" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
             <div id="modalContent"></div>
         </div>
     </div>
+</div>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        let currentCandidates = [];
-        let selectedForCompare = new Set();
-        let isBlindScreening = false;
 
-        const queryInput = document.getElementById('queryInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const expSlider = document.getElementById('expSlider');
-        const expVal = document.getElementById('expVal');
-        const degreeSelect = document.getElementById('degreeSelect');
-        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const resultsCount = document.getElementById('resultsCount');
-        const fileInput = document.getElementById('fileInput');
-        const dropZone = document.getElementById('dropZone');
-        const uploadStatus = document.getElementById('uploadStatus');
-        const blindToggle = document.getElementById('blindScreeningToggle');
+<script>
+    let currentCandidates = [];
+    let selectedForCompare = new Set();
+    let isBlindScreening = false;
 
-        // Blind Screening Toggle Listener
-        blindToggle.addEventListener('change', (e) => {
-            isBlindScreening = e.target.checked;
+    const queryInput    = document.getElementById('queryInput');
+    const searchBtn     = document.getElementById('searchBtn');
+    const expSlider     = document.getElementById('expSlider');
+    const expVal        = document.getElementById('expVal');
+    const degreeSelect  = document.getElementById('degreeSelect');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsCount  = document.getElementById('resultsCount');
+    const fileInput     = document.getElementById('fileInput');
+    const dropZone      = document.getElementById('dropZone');
+    const uploadStatus  = document.getElementById('uploadStatus');
+    const blindToggle   = document.getElementById('blindScreeningToggle');
+
+    blindToggle.addEventListener('change', (e) => {
+        isBlindScreening = e.target.checked;
+        renderResults(currentCandidates, false);
+    });
+
+    expSlider.addEventListener('input', (e) => {
+        expVal.textContent = e.target.value + ' Yrs';
+        performSearch();
+    });
+    degreeSelect.addEventListener('change', performSearch);
+    searchBtn.addEventListener('click', performSearch);
+    queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+    document.querySelectorAll('.chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            queryInput.value = btn.getAttribute('data-query');
+            performSearch();
+        });
+    });
+
+    resetFiltersBtn.addEventListener('click', () => {
+        queryInput.value = '';
+        expSlider.value = 0;
+        expVal.textContent = '0 Yrs';
+        degreeSelect.value = 'Any';
+        document.getElementById('statusFilter').value = 'All';
+        performSearch();
+    });
+
+    function switchMode(mode) {
+        const tabSearch  = document.getElementById('modeTabSearch');
+        const tabJD      = document.getElementById('modeTabJD');
+        const panelSearch = document.getElementById('panelSearch');
+        const panelJD    = document.getElementById('panelJD');
+        if (mode === 'search') {
+            tabSearch.classList.add('active');
+            tabJD.classList.remove('active');
+            panelSearch.style.display = '';
+            panelJD.classList.remove('active');
+            performSearch();
+        } else {
+            tabJD.classList.add('active');
+            tabSearch.classList.remove('active');
+            panelSearch.style.display = 'none';
+            panelJD.classList.add('active');
+        }
+    }
+
+    function loadSampleJD() {
+        document.getElementById('jdInput').value = "Senior Backend Engineer (Python & Cloud Infrastructure)\nWe are looking for a Senior Software Engineer with 3+ years of experience in Python, FastAPI or Django, Docker, Kubernetes, and AWS.\nRequired Education: Bachelor's degree in Computer Science or related field.\nKey Responsibilities: Design scalable microservices, integrate machine learning APIs, and build CI/CD pipelines.";
+    }
+
+    async function matchJobDescription() {
+        const jdText = document.getElementById('jdInput').value.trim();
+        if (!jdText) return;
+        resultsContainer.innerHTML = '<div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i>Analyzing Job Description & evaluating candidates...</div>';
+        try {
+            const res = await fetch('/api/match_jd', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jd_text: jdText })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const req = data.jd_requirements;
+                const banner = document.getElementById('jdRequirementsBanner');
+                const content = document.getElementById('jdRequirementsContent');
+                banner.classList.add('visible');
+                const skillTags = req.skills.map(s => '<span class="skill-tag">' + s + '</span>').join('') || 'None detected';
+                content.innerHTML = '<div style="margin-bottom:5px"><b>Extracted Skills:</b> ' + skillTags + '</div>' +
+                    '<div><b>Experience Required:</b> ' + (req.min_exp > 0 ? req.min_exp + ' Years' : 'Not specified') +
+                    ' &nbsp;|&nbsp; <b>Degree:</b> ' + req.min_degree + '</div>';
+                const results = data.results || [];
+                document.getElementById('jdBadge').textContent = results.length;
+                renderResults(results);
+            }
+        } catch (err) {
+            resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Failed to analyze Job Description.</div>';
+        }
+    }
+
+    function switchUploadTab(tab) {
+        const panelFile = document.getElementById('panelFile');
+        const panelUrl  = document.getElementById('panelUrl');
+        const tabFile   = document.getElementById('tabFile');
+        const tabUrl    = document.getElementById('tabUrl');
+        if (tab === 'file') {
+            panelFile.style.display = '';
+            panelUrl.style.display = 'none';
+            tabFile.classList.add('active');
+            tabUrl.classList.remove('active');
+        } else {
+            panelFile.style.display = 'none';
+            panelUrl.style.display = '';
+            tabFile.classList.remove('active');
+            tabUrl.classList.add('active');
+        }
+        uploadStatus.textContent = '';
+        uploadStatus.className = 'upload-status';
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) uploadFile(e.target.files[0]);
+    });
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--brand)'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '';
+        if (e.dataTransfer.files.length > 0) uploadFile(e.dataTransfer.files[0]);
+    });
+
+    const urlInput = document.getElementById('urlInput');
+    const fetchUrlBtn = document.getElementById('fetchUrlBtn');
+    fetchUrlBtn.addEventListener('click', () => { const u = urlInput.value.trim(); if (u) uploadFromUrl(u); });
+    urlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { const u = urlInput.value.trim(); if (u) uploadFromUrl(u); } });
+
+    async function uploadFile(file) {
+        uploadStatus.textContent = 'Uploading & parsing resume...';
+        uploadStatus.className = 'upload-status';
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                uploadStatus.textContent = 'Uploaded & indexed: ' + data.candidate.name;
+                uploadStatus.className = 'upload-status ok';
+                document.getElementById('indexedCount').textContent = data.total + ' Profiles';
+                document.getElementById('kpiTotal').textContent = data.total;
+                performSearch();
+            } else {
+                uploadStatus.textContent = 'Error: ' + data.error;
+                uploadStatus.className = 'upload-status err';
+            }
+        } catch (err) {
+            uploadStatus.textContent = 'Upload failed.';
+            uploadStatus.className = 'upload-status err';
+        }
+    }
+
+    async function uploadFromUrl(url) {
+        uploadStatus.textContent = 'Fetching & parsing document...';
+        uploadStatus.className = 'upload-status';
+        try {
+            const res = await fetch('/api/upload_url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            const data = await res.json();
+            if (data.success) {
+                uploadStatus.textContent = 'Uploaded & indexed: ' + data.candidate.name;
+                uploadStatus.className = 'upload-status ok';
+                document.getElementById('indexedCount').textContent = data.total + ' Profiles';
+                document.getElementById('kpiTotal').textContent = data.total;
+                urlInput.value = '';
+                performSearch();
+            } else {
+                uploadStatus.textContent = 'Error: ' + data.error;
+                uploadStatus.className = 'upload-status err';
+            }
+        } catch (err) {
+            uploadStatus.textContent = 'Failed to fetch link.';
+            uploadStatus.className = 'upload-status err';
+        }
+    }
+
+    async function performSearch() {
+        resultsContainer.innerHTML = '<div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i>Ranking candidates...</div>';
+        try {
+            const res = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: queryInput.value,
+                    min_exp: parseFloat(expSlider.value),
+                    min_degree: degreeSelect.value
+                })
+            });
+            const data = await res.json();
+            renderResults(data.results || []);
+        } catch (err) {
+            resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Failed to fetch results.</div>';
+        }
+    }
+
+    function filterResultsByPipeline() {
+        const status = document.getElementById('statusFilter').value;
+        if (status === 'All') {
             renderResults(currentCandidates, false);
-        });
+        } else {
+            const filtered = currentCandidates.filter(item => (item.candidate.status || 'New') === status);
+            renderResults(filtered, false);
+        }
+    }
 
-        // Filter Listeners
-        expSlider.addEventListener('input', (e) => {
-            expVal.textContent = `${e.target.value} Yrs`;
-            performSearch();
-        });
+    function renderResults(results, updateGlobal = true) {
+        if (updateGlobal) currentCandidates = results;
 
-        degreeSelect.addEventListener('change', performSearch);
-        searchBtn.addEventListener('click', performSearch);
-        queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+        const n = results.length;
+        resultsCount.textContent = n + (n === 1 ? ' result' : ' results');
+        document.getElementById('kpiResults').textContent = n;
+        document.getElementById('searchBadge').textContent = n;
 
-        document.querySelectorAll('.chip-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                queryInput.value = btn.getAttribute('data-query');
-                performSearch();
-            });
-        });
-
-        resetFiltersBtn.addEventListener('click', () => {
-            queryInput.value = '';
-            expSlider.value = 0;
-            expVal.textContent = '0 Yrs';
-            degreeSelect.value = 'Any';
-            document.getElementById('statusFilter').value = 'All';
-            performSearch();
-        });
-
-        // Tab Switching
-        function switchMode(mode) {
-            const tabSearch = document.getElementById('modeTabSearch');
-            const tabJD = document.getElementById('modeTabJD');
-            const panelSearch = document.getElementById('panelSearch');
-            const panelJD = document.getElementById('panelJD');
-
-            if (mode === 'search') {
-                tabSearch.className = 'flex-1 py-3 px-4 text-center border-b-2 border-blue-600 text-blue-700 font-bold flex items-center justify-center gap-2 transition';
-                tabJD.className = 'flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition';
-                panelSearch.classList.remove('hidden');
-                panelJD.classList.add('hidden');
-                performSearch();
-            } else {
-                tabSearch.className = 'flex-1 py-3 px-4 text-center text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 transition';
-                tabJD.className = 'flex-1 py-3 px-4 text-center border-b-2 border-indigo-600 text-indigo-700 font-bold flex items-center justify-center gap-2 transition';
-                panelSearch.classList.add('hidden');
-                panelJD.classList.remove('hidden');
-            }
+        if (n > 0) {
+            const scores = results.map(r => r.suitability_score);
+            const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+            const top = Math.max(...scores);
+            document.getElementById('kpiAvgScore').textContent = avg + '%';
+            document.getElementById('kpiTopScore').textContent = top + '%';
+        } else {
+            document.getElementById('kpiAvgScore').textContent = '-';
+            document.getElementById('kpiTopScore').textContent = '-';
         }
 
-        // Sample JD
-        function loadSampleJD() {
-            document.getElementById('jdInput').value = "Senior Backend Engineer (Python & Cloud Infrastructure)\nWe are looking for a Senior Software Engineer with 3+ years of experience in Python, FastAPI or Django, Docker, Kubernetes, and AWS.\nRequired Education: Bachelor's degree in Computer Science or related field.\nKey Responsibilities: Design scalable microservices, integrate machine learning APIs, and build CI/CD pipelines.";
+        if (n === 0) {
+            resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-user-slash"></i>No candidates match your current filters.</div>';
+            return;
         }
 
-        async function matchJobDescription() {
-            const jdText = document.getElementById('jdInput').value.trim();
-            if (!jdText) return;
-
-            resultsContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-600 block"></i> Analyzing Job Description &amp; evaluating candidates...</div>';
-
-            try {
-                const res = await fetch('/api/match_jd', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jd_text: jdText })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const req = data.jd_requirements;
-                    const banner = document.getElementById('jdRequirementsBanner');
-                    const content = document.getElementById('jdRequirementsContent');
-                    banner.classList.remove('hidden');
-                    content.innerHTML = `
-                        <div><b>Extracted Skills:</b> ${req.skills.map(s => `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded mr-1">${s}</span>`).join('') || 'None detected'}</div>
-                        <div><b>Experience Required:</b> ${req.min_exp > 0 ? req.min_exp + ' Years' : 'Not specified'} | <b>Degree:</b> ${req.min_degree}</div>
-                    `;
-                    renderResults(data.results || []);
-                }
-            } catch (err) {
-                resultsContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to analyze Job Description.</div>';
-            }
-        }
-
-        // Upload Tab Switcher
-        function switchUploadTab(tab) {
-            const panelFile = document.getElementById('panelFile');
-            const panelUrl  = document.getElementById('panelUrl');
-            const tabFile   = document.getElementById('tabFile');
-            const tabUrl    = document.getElementById('tabUrl');
-            if (tab === 'file') {
-                panelFile.classList.remove('hidden');
-                panelUrl.classList.add('hidden');
-                tabFile.className = 'flex-1 py-1.5 bg-blue-600 text-white transition text-center';
-                tabUrl.className  = 'flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center';
-            } else {
-                panelFile.classList.add('hidden');
-                panelUrl.classList.remove('hidden');
-                tabFile.className = 'flex-1 py-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-center';
-                tabUrl.className  = 'flex-1 py-1.5 bg-blue-600 text-white transition text-center';
-            }
-            document.getElementById('uploadStatus').textContent = '';
-        }
-
-        // File Drag & Drop
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) uploadFile(e.target.files[0]);
-        });
-
-        // URL Upload Handlers
-        const urlInput = document.getElementById('urlInput');
-        const fetchUrlBtn = document.getElementById('fetchUrlBtn');
-        if (fetchUrlBtn) {
-            fetchUrlBtn.addEventListener('click', () => {
-                const url = urlInput.value.trim();
-                if (url) uploadFromUrl(url);
-            });
-        }
-        if (urlInput) {
-            urlInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const url = urlInput.value.trim();
-                    if (url) uploadFromUrl(url);
-                }
-            });
-        }
-
-        async function uploadFile(file) {
-            uploadStatus.textContent = 'Uploading & parsing resume...';
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    uploadStatus.innerHTML = `<span class="text-emerald-600 font-semibold">Uploaded &amp; indexed: ${data.candidate.name}</span>`;
-                    document.getElementById('indexedCount').textContent = `${data.total} Profiles`;
-                    performSearch();
-                } else {
-                    uploadStatus.innerHTML = `<span class="text-red-500">Error: ${data.error}</span>`;
-                }
-            } catch (err) {
-                uploadStatus.textContent = 'Upload failed.';
-            }
-        }
-
-        async function uploadFromUrl(url) {
-            uploadStatus.innerHTML = '<span class="text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Fetching &amp; parsing document from link...</span>';
-            try {
-                const res = await fetch('/api/upload_url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    uploadStatus.innerHTML = `<span class="text-emerald-600 font-semibold">Uploaded &amp; indexed: ${data.candidate.name}</span>`;
-                    document.getElementById('indexedCount').textContent = `${data.total} Profiles`;
-                    urlInput.value = '';
-                    performSearch();
-                } else {
-                    uploadStatus.innerHTML = `<span class="text-red-500 font-semibold">Error: ${data.error}</span>`;
-                }
-            } catch (err) {
-                uploadStatus.innerHTML = '<span class="text-red-500 font-semibold">Failed to fetch document link.</span>';
-            }
-        }
-
-        // Search Candidates
-        async function performSearch() {
-            resultsContainer.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-blue-600 block"></i> Ranking candidates...</div>';
-
-            try {
-                const res = await fetch('/api/search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: queryInput.value,
-                        min_exp: parseFloat(expSlider.value),
-                        min_degree: degreeSelect.value
-                    })
-                });
-
-                const data = await res.json();
-                renderResults(data.results || []);
-            } catch (err) {
-                resultsContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to fetch search results.</div>';
-            }
-        }
-
-        function filterResultsByPipeline() {
-            const status = document.getElementById('statusFilter').value;
-            if (status === 'All') {
-                renderResults(currentCandidates, false);
-            } else {
-                const filtered = currentCandidates.filter(item => (item.candidate.status || 'New') === status);
-                renderResults(filtered, false);
-            }
-        }
-
-        function renderResults(results, updateGlobal = true) {
-            if (updateGlobal) currentCandidates = results;
-            resultsCount.textContent = `${results.length} Candidates`;
-
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<div class="bg-white p-8 rounded-2xl text-center text-gray-500 font-medium border border-gray-200">No candidates match your current search filters.</div>';
-                return;
-            }
-
-            resultsContainer.innerHTML = results.map((item, idx) => {
-                const c = item.candidate;
-                const score = item.suitability_score;
-                const det = item.match_details;
-
-                const displayName = isBlindScreening ? `${c.anonymous_id} (Blind Profile)` : c.name;
-                const displayEmail = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.email;
-                const displayPhone = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.phone;
-                const displayLocation = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.location;
-
-                let badgeBg = score >= 80 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                              score >= 60 ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-red-100 text-red-800 border-red-300';
-
-                const matchedSet = new Set(det.matched_skills || []);
-                const skillsBadges = (c.skills || []).map(s => {
-                    const isMatched = matchedSet.has(s);
-                    const chipStyle = isMatched
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold'
-                        : 'bg-gray-100 text-gray-700 border-gray-200';
-                    return `<span class="${chipStyle} text-[11px] px-2 py-0.5 rounded-md border mr-1 mb-1 inline-block">${s}</span>`;
-                }).join('');
-
-                const isChecked = selectedForCompare.has(c.id) ? 'checked' : '';
-
-                return `
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm card-hover transition flex flex-col md:flex-row justify-between items-start gap-4">
-                        
-                        <div class="flex items-start gap-3 flex-1">
-                            <input type="checkbox" onchange="toggleCompare('${c.id}')" ${isChecked}
-                                class="mt-1.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer">
-                            
-                            <div class="space-y-1.5 flex-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="bg-gray-900 text-white font-black text-[10px] px-2 py-0.5 rounded">#${idx + 1}</span>
-                                    <h4 class="text-base font-extrabold text-gray-900">${displayName}</h4>
-                                    <span class="text-xs font-semibold text-gray-500">- ${c.title}</span>
-                                </div>
-
-                                <p class="text-xs text-blue-700 font-medium">${c.summary_pitch || ''}</p>
-
-                                <div class="text-[11px] text-gray-500 flex flex-wrap gap-3 font-medium pt-0.5">
-                                    <span><i class="fa-regular fa-envelope text-blue-500 mr-1"></i>${displayEmail}</span>
-                                    <span><i class="fa-solid fa-phone text-blue-500 mr-1"></i>${displayPhone}</span>
-                                    <span><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>${displayLocation}</span>
-                                </div>
-
-                                <div class="text-xs font-semibold text-gray-700 flex flex-wrap gap-3 pt-1">
-                                    <span><i class="fa-solid fa-briefcase text-blue-500 mr-1"></i><b>Exp:</b> ${c.experience_years} Years</span>
-                                    <span><i class="fa-solid fa-graduation-cap text-blue-500 mr-1"></i><b>Degree:</b> ${c.highest_degree}</span>
-                                </div>
-
-                                <div class="pt-2 flex flex-wrap items-center">
-                                    ${skillsBadges}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col items-end justify-between self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 min-w-[190px]">
-                            <div class="flex flex-col items-end">
-                                <span class="text-base font-black px-3.5 py-1 rounded-full border ${badgeBg} shadow-sm">
-                                    ${score}% Match
-                                </span>
-                                <div class="text-[10px] text-gray-500 text-right mt-1">
-                                    Skills: ${det.skill_score_pct}% | Exp: ${det.exp_score_pct}%
-                                </div>
-                            </div>
-
-                            <div class="mt-3 w-full">
-                                <select onchange="updateCandidateStatus('${c.id}', this.value)"
-                                    class="w-full text-xs font-semibold bg-gray-50 border border-gray-300 rounded-lg p-1.5 text-gray-700 focus:ring-blue-500">
-                                    <option value="New" ${c.status === 'New' ? 'selected' : ''}>Status: New</option>
-                                    <option value="Shortlisted" ${c.status === 'Shortlisted' ? 'selected' : ''}>Status: Shortlisted</option>
-                                    <option value="Interview Scheduled" ${c.status === 'Interview Scheduled' ? 'selected' : ''}>Status: Interview</option>
-                                    <option value="Archived" ${c.status === 'Archived' ? 'selected' : ''}>Status: Archived</option>
-                                </select>
-                            </div>
-
-                            <div class="flex items-center gap-2 mt-2.5">
-                                <button onclick="openOutreachModal(${idx})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-                                    <i class="fa-regular fa-paper-plane"></i> Email Draft
-                                </button>
-                                <button onclick="viewDetails(${idx})" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-bold px-2.5 py-1 rounded-lg transition">
-                                    Profile <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Status Update
-        async function updateCandidateStatus(candId, newStatus) {
-            try {
-                await fetch('/api/update_status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: candId, status: newStatus })
-                });
-                const candObj = currentCandidates.find(item => item.candidate.id === candId);
-                if (candObj) candObj.candidate.status = newStatus;
-            } catch (e) {
-                console.error('Status update failed');
-            }
-        }
-
-        // Compare Candidates
-        function toggleCompare(candId) {
-            if (selectedForCompare.has(candId)) {
-                selectedForCompare.delete(candId);
-            } else {
-                if (selectedForCompare.size >= 3) {
-                    alert('You can select a maximum of 3 candidates for side-by-side comparison.');
-                    return;
-                }
-                selectedForCompare.add(candId);
-            }
-
-            const count = selectedForCompare.size;
-            document.getElementById('compareCount').textContent = count;
-            document.getElementById('compareBtn').disabled = count < 2;
-        }
-
-        function openComparisonModal() {
-            const selectedList = currentCandidates.filter(item => selectedForCompare.has(item.candidate.id));
-            if (selectedList.length === 0) return;
-
-            const cols = selectedList.map(item => {
-                const c = item.candidate;
-                const det = item.match_details;
-                return `
-                    <div class="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 min-w-[240px]">
-                        <div>
-                            <span class="text-xs font-bold text-blue-600">${c.status || 'New'}</span>
-                            <h4 class="text-base font-extrabold text-gray-900">${isBlindScreening ? c.anonymous_id : c.name}</h4>
-                            <p class="text-xs text-gray-500">${c.title}</p>
-                        </div>
-                        <div class="bg-white p-2.5 rounded-lg border text-xs">
-                            <b>Match Score:</b> <span class="font-black text-blue-700">${item.suitability_score}%</span>
-                        </div>
-                        <div class="text-xs space-y-1">
-                            <div><b>Experience:</b> ${c.experience_years} Years</div>
-                            <div><b>Highest Degree:</b> ${c.highest_degree}</div>
-                            <div><b>Location:</b> ${isBlindScreening ? 'Hidden' : c.contact.location}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs font-bold mb-1">Key Skills:</div>
-                            <div class="flex flex-wrap gap-1">${c.skills.map(s => `<span class="bg-white text-gray-800 text-[10px] px-2 py-0.5 rounded border">${s}</span>`).join('')}</div>
-                        </div>
-                        ${det.missing_skills.length ? `
-                        <div>
-                            <div class="text-xs font-bold text-red-600 mb-1">Missing Skills:</div>
-                            <div class="flex flex-wrap gap-1">${det.missing_skills.map(s => `<span class="bg-red-50 text-red-700 text-[10px] px-2 py-0.5 rounded border border-red-200">${s}</span>`).join('')}</div>
-                        </div>` : ''}
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('compareContent').innerHTML = `<div class="flex gap-4">${cols}</div>`;
-            document.getElementById('compareModal').classList.remove('hidden');
-        }
-
-        function closeComparisonModal() {
-            document.getElementById('compareModal').classList.add('hidden');
-        }
-
-        // Outreach Email
-        function openOutreachModal(idx) {
-            const item = currentCandidates[idx];
-            document.getElementById('outreachEmailText').value = item.outreach_draft || '';
-            document.getElementById('outreachModal').classList.remove('hidden');
-        }
-
-        function closeOutreachModal() {
-            document.getElementById('outreachModal').classList.add('hidden');
-        }
-
-        function copyOutreachEmail() {
-            const textarea = document.getElementById('outreachEmailText');
-            textarea.select();
-            document.execCommand('copy');
-            const btn = document.getElementById('copyEmailBtn');
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy to Clipboard';
-            }, 2000);
-        }
-
-        // Full Profile Modal
-        function viewDetails(idx) {
-            const item = currentCandidates[idx];
-            const c = item.candidate;
+        resultsContainer.innerHTML = results.map((item, idx) => {
+            const c   = item.candidate;
+            const score = item.suitability_score;
             const det = item.match_details;
 
-            const displayName = isBlindScreening ? `${c.anonymous_id} (Blind Profile)` : c.name;
-            const displayEmail = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.email;
-            const displayPhone = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.phone;
-            const displayLocation = isBlindScreening ? 'Hidden (Blind Mode)' : c.contact.location;
+            const displayName     = isBlindScreening ? (c.anonymous_id + ' (Blind Profile)') : c.name;
+            const displayEmail    = isBlindScreening ? 'Hidden' : c.contact.email;
+            const displayPhone    = isBlindScreening ? 'Hidden' : c.contact.phone;
+            const displayLocation = isBlindScreening ? 'Hidden' : c.contact.location;
 
-            document.getElementById('modalContent').innerHTML = `
-                <h3 class="text-2xl font-extrabold text-gray-900 mb-1">${displayName}</h3>
-                <p class="text-sm font-semibold text-blue-600 mb-4">${c.title}</p>
-                <hr class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-medium mb-5 bg-gray-50 p-4 rounded-xl border">
-                    <div><b>Email:</b> ${displayEmail}</div>
-                    <div><b>Phone:</b> ${displayPhone}</div>
-                    <div><b>Location:</b> ${displayLocation}</div>
-                    <div><b>Experience:</b> ${c.experience_years} Years</div>
-                    <div><b>Highest Degree:</b> ${c.highest_degree}</div>
-                    <div><b>Suitability Match:</b> ${item.suitability_score}%</div>
-                    <div><b>Pipeline Status:</b> ${c.status || 'New'}</div>
-                </div>
-                <h4 class="text-xs font-bold uppercase text-gray-700 mb-2">Parsed Technical Skills</h4>
-                <div class="mb-5">${c.skills.map(s => `<span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded mr-1.5 mb-1 inline-block border border-blue-200 font-medium">${s}</span>`).join('')}</div>
-                <h4 class="text-xs font-bold uppercase text-gray-700 mb-2">Raw Parsed Resume Text</h4>
-                <pre class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs max-h-60 overflow-y-auto whitespace-pre-wrap font-mono">${c.raw_text}</pre>
-            `;
+            const scoreCls   = score >= 75 ? 'high' : score >= 50 ? 'mid' : 'low';
+            const cardCls    = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+            const barCls     = score >= 75 ? 'green' : '';
 
-            document.getElementById('candidateModal').classList.remove('hidden');
+            const matchedSet = new Set(det.matched_skills || []);
+            const skillChips = (c.skills || []).map(s => {
+                const cls = matchedSet.has(s) ? 'matched' : 'normal';
+                return '<span class="skill-chip ' + cls + '">' + s + '</span>';
+            }).join('');
+
+            const isChecked = selectedForCompare.has(c.id) ? 'checked' : '';
+
+            return '<div class="candidate-card ' + cardCls + '">' +
+                '<input type="checkbox" class="card-checkbox" onchange="toggleCompare(\'' + c.id + '\')" ' + isChecked + '>' +
+                '<div class="card-body">' +
+                    '<div class="card-top">' +
+                        '<span class="rank-badge">#' + (idx + 1) + '</span>' +
+                        '<span class="cand-name">' + displayName + '</span>' +
+                        '<span class="cand-title">' + c.title + '</span>' +
+                    '</div>' +
+                    '<div class="cand-pitch">' + (c.summary_pitch || '') + '</div>' +
+                    '<div class="cand-meta">' +
+                        '<span><i class="fa-regular fa-envelope"></i>' + displayEmail + '</span>' +
+                        '<span><i class="fa-solid fa-phone"></i>' + displayPhone + '</span>' +
+                        '<span><i class="fa-solid fa-location-dot"></i>' + displayLocation + '</span>' +
+                    '</div>' +
+                    '<div class="cand-stats">' +
+                        '<span><i class="fa-solid fa-briefcase"></i><b>Exp:</b> ' + c.experience_years + ' yrs</span>' +
+                        '<span><i class="fa-solid fa-graduation-cap"></i><b>Degree:</b> ' + c.highest_degree + '</span>' +
+                    '</div>' +
+                    '<div class="skill-chips">' + skillChips + '</div>' +
+                '</div>' +
+                '<div class="card-side">' +
+                    '<div>' +
+                        '<div class="score-pill ' + scoreCls + '">' + score + '% Match</div>' +
+                        '<div class="score-bar-wrap">' +
+                            '<div class="score-bar-label"><span>Skills</span><span>' + det.skill_score_pct + '%</span></div>' +
+                            '<div class="bar-bg"><div class="bar-fill ' + barCls + '" style="width:' + det.skill_score_pct + '%"></div></div>' +
+                        '</div>' +
+                        '<div class="score-bar-wrap" style="margin-top:5px">' +
+                            '<div class="score-bar-label"><span>Exp</span><span>' + det.exp_score_pct + '%</span></div>' +
+                            '<div class="bar-bg"><div class="bar-fill ' + barCls + '" style="width:' + det.exp_score_pct + '%"></div></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<select class="pipeline-select" onchange="updateCandidateStatus(\'' + c.id + '\', this.value)">' +
+                        '<option value="New"' + (c.status === 'New' ? ' selected' : '') + '>New</option>' +
+                        '<option value="Shortlisted"' + (c.status === 'Shortlisted' ? ' selected' : '') + '>Shortlisted</option>' +
+                        '<option value="Interview Scheduled"' + (c.status === 'Interview Scheduled' ? ' selected' : '') + '>Interview Scheduled</option>' +
+                        '<option value="Archived"' + (c.status === 'Archived' ? ' selected' : '') + '>Archived</option>' +
+                    '</select>' +
+                    '<div class="card-actions">' +
+                        '<button class="action-btn email" onclick="openOutreachModal(' + idx + ')"><i class="fa-regular fa-paper-plane"></i> Email</button>' +
+                        '<button class="action-btn profile" onclick="viewDetails(' + idx + ')">Profile <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function updateCandidateStatus(candId, newStatus) {
+        try {
+            await fetch('/api/update_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: candId, status: newStatus })
+            });
+            const obj = currentCandidates.find(item => item.candidate.id === candId);
+            if (obj) obj.candidate.status = newStatus;
+        } catch (e) { console.error('Status update failed'); }
+    }
+
+    function toggleCompare(candId) {
+        if (selectedForCompare.has(candId)) {
+            selectedForCompare.delete(candId);
+        } else {
+            if (selectedForCompare.size >= 3) { alert('Max 3 candidates for comparison.'); return; }
+            selectedForCompare.add(candId);
         }
+        const count = selectedForCompare.size;
+        document.getElementById('compareCount').textContent = count;
+        document.getElementById('compareBtn').disabled = count < 2;
+    }
 
-        document.getElementById('closeModalBtn').addEventListener('click', () => {
-            document.getElementById('candidateModal').classList.add('hidden');
+    function openComparisonModal() {
+        const selectedList = currentCandidates.filter(item => selectedForCompare.has(item.candidate.id));
+        if (selectedList.length === 0) return;
+
+        const cols = selectedList.map(item => {
+            const c   = item.candidate;
+            const det = item.match_details;
+            const name = isBlindScreening ? c.anonymous_id : c.name;
+            const skillsHtml = c.skills.map(s => '<span class="skill-chip normal">' + s + '</span>').join('');
+            const missingHtml = det.missing_skills.length
+                ? '<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--red-text);margin-bottom:4px">Missing Skills:</div><div class="skill-chips">' +
+                  det.missing_skills.map(s => '<span class="skill-chip" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red-text)">' + s + '</span>').join('') + '</div></div>'
+                : '';
+            return '<div class="compare-col">' +
+                '<div class="compare-col-name">' + name + '</div>' +
+                '<div class="compare-col-title">' + c.title + '</div>' +
+                '<div class="compare-score"><i class="fa-solid fa-chart-simple" style="color:var(--brand);margin-right:5px"></i>Match: <b>' + item.suitability_score + '%</b></div>' +
+                '<div class="compare-row"><b>Experience:</b> ' + c.experience_years + ' yrs</div>' +
+                '<div class="compare-row"><b>Degree:</b> ' + c.highest_degree + '</div>' +
+                '<div class="compare-row"><b>Location:</b> ' + (isBlindScreening ? 'Hidden' : c.contact.location) + '</div>' +
+                '<div class="compare-row"><b>Stage:</b> ' + (c.status || 'New') + '</div>' +
+                '<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;margin-bottom:5px">Skills:</div><div class="skill-chips">' + skillsHtml + '</div></div>' +
+                missingHtml +
+            '</div>';
+        }).join('');
+
+        document.getElementById('compareContent').innerHTML = '<div class="compare-cols">' + cols + '</div>';
+        document.getElementById('compareModal').classList.add('open');
+    }
+    function closeComparisonModal() { document.getElementById('compareModal').classList.remove('open'); }
+
+    function openOutreachModal(idx) {
+        const item = currentCandidates[idx];
+        document.getElementById('outreachEmailText').value = item.outreach_draft || '';
+        document.getElementById('outreachModal').classList.add('open');
+    }
+    function closeOutreachModal() { document.getElementById('outreachModal').classList.remove('open'); }
+
+    function copyOutreachEmail() {
+        const textarea = document.getElementById('outreachEmailText');
+        textarea.select();
+        document.execCommand('copy');
+        const btn = document.getElementById('copyEmailBtn');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy to Clipboard'; }, 2000);
+    }
+
+    function viewDetails(idx) {
+        const item = currentCandidates[idx];
+        const c   = item.candidate;
+        const det = item.match_details;
+
+        const displayName     = isBlindScreening ? (c.anonymous_id + ' (Blind Profile)') : c.name;
+        const displayEmail    = isBlindScreening ? 'Hidden' : c.contact.email;
+        const displayPhone    = isBlindScreening ? 'Hidden' : c.contact.phone;
+        const displayLocation = isBlindScreening ? 'Hidden' : c.contact.location;
+
+        const skillBadges = c.skills.map(s => '<span class="skill-chip normal" style="font-size:11px;padding:3px 9px">' + s + '</span>').join('');
+
+        document.getElementById('modalContent').innerHTML =
+            '<div style="margin-bottom:4px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:20px;font-weight:800;color:var(--text-main)">' + displayName + '</div>' +
+            '<div style="font-size:13px;font-weight:600;color:var(--brand);margin-bottom:16px">' + c.title + '</div>' +
+            '<div class="detail-grid">' +
+                '<div class="detail-item"><span class="detail-label">Email</span><span class="detail-val">' + displayEmail + '</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Phone</span><span class="detail-val">' + displayPhone + '</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Location</span><span class="detail-val">' + displayLocation + '</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Experience</span><span class="detail-val">' + c.experience_years + ' Years</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Highest Degree</span><span class="detail-val">' + c.highest_degree + '</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Match Score</span><span class="detail-val" style="color:var(--brand)">' + item.suitability_score + '%</span></div>' +
+                '<div class="detail-item"><span class="detail-label">Pipeline Stage</span><span class="detail-val">' + (c.status || 'New') + '</span></div>' +
+            '</div>' +
+            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-subtle);margin-bottom:8px">Technical Skills</div>' +
+            '<div class="skill-chips" style="margin-bottom:18px">' + skillBadges + '</div>' +
+            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-subtle);margin-bottom:6px">Raw Parsed Text</div>' +
+            '<div class="raw-text">' + (c.raw_text || '') + '</div>';
+
+        document.getElementById('candidateModal').classList.add('open');
+    }
+
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+        document.getElementById('candidateModal').classList.remove('open');
+    });
+
+    // Close modals on overlay click
+    ['compareModal','outreachModal','candidateModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('open');
         });
+    });
 
-        // Recruiter CSV / JSON Exporters
-        function exportData(type) {
-            if (type === 'json') {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentCandidates.map(c => c.candidate), null, 2));
-                const dl = document.createElement('a');
-                dl.setAttribute("href", dataStr);
-                dl.setAttribute("download", "candidates_roster.json");
-                dl.click();
-            } else {
-                let csv = "Name,Title,ExperienceYears,HighestDegree,Status,Skills,Email,Phone,Location\n";
-                currentCandidates.forEach(item => {
-                    const c = item.candidate;
-                    csv += `"${c.name}","${c.title}","${c.experience_years}","${c.highest_degree}","${c.status || 'New'}","${(c.skills || []).join('; ')}","${c.contact.email}","${c.contact.phone}","${c.contact.location}"\n`;
-                });
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', 'candidates_roster.csv');
-                link.click();
-            }
+    function exportData(type) {
+        if (type === 'json') {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentCandidates.map(c => c.candidate), null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "candidates_roster.json");
+            dl.click();
+        } else {
+            let csv = "Name,Title,ExperienceYears,HighestDegree,Status,Skills,Email,Phone,Location\n";
+            currentCandidates.forEach(item => {
+                const c = item.candidate;
+                csv += '"' + c.name + '","' + c.title + '","' + c.experience_years + '","' + c.highest_degree + '","' + (c.status || 'New') + '","' + (c.skills || []).join('; ') + '","' + c.contact.email + '","' + c.contact.phone + '","' + c.contact.location + '"\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'candidates_roster.csv');
+            link.click();
         }
+    }
 
-        // Run Initial Search
-        performSearch();
-    </script>
+    // Boot
+    performSearch();
+</script>
+
 </body>
 </html>
