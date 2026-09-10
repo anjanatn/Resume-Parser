@@ -1,4 +1,4 @@
-﻿# AI Resume Parser & Intelligent Candidate Search Engine
+# AI Resume Parser & Intelligent Candidate Search Engine
 
 An automated, AI-powered resume parsing and candidate ranking system built with Python, Flask, and Scikit-Learn, deployable on Vercel.
 
@@ -187,7 +187,17 @@ Search and rank candidates by natural language query.
 ```
 
 ### `POST /api/upload`
-Upload a new PDF resume (multipart/form-data, field: `file`).
+Upload a new PDF resume file (`multipart/form-data`, field: `file`).
+
+### `POST /api/upload_url`
+Fetch and parse a PDF resume directly from a web document link or cloud URL (Google Drive, Dropbox, direct PDF link).
+
+**Request Body (JSON):**
+```json
+{
+  "url": "https://example.com/resume.pdf"
+}
+```
 
 ### `GET /api/candidates`
 Returns all indexed candidate profiles.

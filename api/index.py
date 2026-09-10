@@ -64,6 +64,54 @@ def upload_api():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/upload_url', methods=['POST'])
+def upload_url_api():
+    import urllib.request
+    import io
+    import re
+    from urllib.parse import urlparse
+
+    data = request.get_json() or {}
+    raw_url = data.get('url', '').strip()
+    if not raw_url:
+        return jsonify({"success": False, "error": "No URL provided"}), 400
+
+    # Normalize URLs for common cloud storage services (Google Drive, Dropbox)
+    url = raw_url
+    gdrive_match = re.search(r'drive\.google\.com/(?:file/d/([a-zA-Z0-9_-]+)|open\?id=([a-zA-Z0-9_-]+))', url)
+    if gdrive_match:
+        file_id = gdrive_match.group(1) or gdrive_match.group(2)
+        url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    elif "dropbox.com" in url:
+        if "dl=0" in url:
+            url = url.replace("dl=0", "dl=1")
+        elif "dl=1" not in url and "raw=1" not in url:
+            url = f"{url}&dl=1" if "?" in url else f"{url}?dl=1"
+
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as response:
+            pdf_bytes = response.read()
+
+        if not pdf_bytes:
+            return jsonify({"success": False, "error": "Downloaded file is empty"}), 400
+
+        # Infer filename from URL
+        path = urlparse(raw_url).path
+        filename = os.path.basename(path) or "document.pdf"
+        if not filename.lower().endswith(".pdf"):
+            filename = f"{filename}.pdf"
+
+        parsed = parser.parse(io.BytesIO(pdf_bytes), filename=filename)
+        candidates_db.append(parsed)
+        search_engine.set_candidates(candidates_db)
+        return jsonify({"success": True, "candidate": parsed, "total": len(candidates_db)})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Failed to fetch or parse document link: {str(e)}"}), 500
+
 @app.route('/api/candidates', methods=['GET'])
 def get_candidates():
     return jsonify({"success": True, "candidates": candidates_db})

@@ -1,4 +1,4 @@
-﻿import os
+import os
 import tempfile
 import json
 import pandas as pd
@@ -109,26 +109,75 @@ with st.sidebar:
     st.title("Recruiter Controls")
 
     st.subheader("Upload New Resumes")
-    uploaded_files = st.file_uploader("Upload PDF Resumes", type=["pdf"], accept_multiple_files=True)
+    upload_mode = st.radio("Upload Method", ["File Upload", "Paste Document Link"], horizontal=True)
 
-    if uploaded_files:
-        parser = ResumeParser()
-        new_count = 0
-        for uploaded_file in uploaded_files:
-            # Check if already added
-            if not any(c.get("filename") == uploaded_file.name for c in st.session_state.candidates):
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                    tmp.write(uploaded_file.read())
-                    tmp_path = tmp.name
+    if upload_mode == "File Upload":
+        uploaded_files = st.file_uploader("Upload PDF Resumes", type=["pdf"], accept_multiple_files=True)
 
-                parsed = parser.parse(tmp_path, filename=uploaded_file.name)
-                st.session_state.candidates.append(parsed)
-                new_count += 1
-                os.unlink(tmp_path)
+        if uploaded_files:
+            parser = ResumeParser()
+            new_count = 0
+            for uploaded_file in uploaded_files:
+                # Check if already added
+                if not any(c.get("filename") == uploaded_file.name for c in st.session_state.candidates):
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                        tmp.write(uploaded_file.read())
+                        tmp_path = tmp.name
 
-        if new_count > 0:
-            st.session_state.search_engine.set_candidates(st.session_state.candidates)
-            st.success(f"Successfully processed {new_count} new resume(s).")
+                    parsed = parser.parse(tmp_path, filename=uploaded_file.name)
+                    st.session_state.candidates.append(parsed)
+                    new_count += 1
+                    os.unlink(tmp_path)
+
+            if new_count > 0:
+                st.session_state.search_engine.set_candidates(st.session_state.candidates)
+                st.success(f"Successfully processed {new_count} new resume(s).")
+    else:
+        doc_url = st.text_input("Paste PDF Document URL:", placeholder="https://example.com/resume.pdf")
+        if st.button("Fetch & Parse Document"):
+            if doc_url.strip():
+                import urllib.request
+                import io
+                import re
+                from urllib.parse import urlparse
+
+                url = doc_url.strip()
+                gdrive_match = re.search(r'drive\.google\.com/(?:file/d/([a-zA-Z0-9_-]+)|open\?id=([a-zA-Z0-9_-]+))', url)
+                if gdrive_match:
+                    file_id = gdrive_match.group(1) or gdrive_match.group(2)
+                    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+                elif "dropbox.com" in url:
+                    if "dl=0" in url:
+                        url = url.replace("dl=0", "dl=1")
+                    elif "dl=1" not in url and "raw=1" not in url:
+                        url = f"{url}&dl=1" if "?" in url else f"{url}?dl=1"
+
+                try:
+                    with st.spinner("Fetching and parsing resume from link..."):
+                        req = urllib.request.Request(
+                            url,
+                            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+                        )
+                        with urllib.request.urlopen(req, timeout=15) as response:
+                            pdf_bytes = response.read()
+
+                        if not pdf_bytes:
+                            st.error("Downloaded file is empty.")
+                        else:
+                            path = urlparse(doc_url).path
+                            filename = os.path.basename(path) or "document.pdf"
+                            if not filename.lower().endswith(".pdf"):
+                                filename = f"{filename}.pdf"
+
+                            parser = ResumeParser()
+                            parsed = parser.parse(io.BytesIO(pdf_bytes), filename=filename)
+                            st.session_state.candidates.append(parsed)
+                            st.session_state.search_engine.set_candidates(st.session_state.candidates)
+                            st.success(f"Successfully parsed and indexed: {parsed['name']}")
+                except Exception as e:
+                    st.error(f"Failed to fetch document from link: {str(e)}")
+            else:
+                st.warning("Please enter a valid document URL.")
 
     st.markdown("---")
     st.metric("Total Resumes Indexed", len(st.session_state.candidates))
