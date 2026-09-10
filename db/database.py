@@ -4,8 +4,23 @@ import os
 import hashlib
 from datetime import datetime
 
+import shutil
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "db", "resumes.db")
+
+# On Vercel / AWS Lambda, filesystem is read-only except /tmp
+if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    TMP_DIR = "/tmp"
+    DB_PATH = os.path.join(TMP_DIR, "resumes.db")
+    BUNDLED_DB = os.path.join(BASE_DIR, "db", "resumes.db")
+    # If /tmp/resumes.db doesn't exist yet, copy bundled SQLite if available
+    if not os.path.exists(DB_PATH) and os.path.exists(BUNDLED_DB):
+        try:
+            shutil.copy2(BUNDLED_DB, DB_PATH)
+        except Exception:
+            pass
+else:
+    DB_PATH = os.path.join(BASE_DIR, "db", "resumes.db")
 
 def get_db_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
