@@ -171,7 +171,7 @@ class ResumeParser:
             exp_section = text[start_pos:end_pos]
 
         # Match date ranges like "Mar 2022 - Present", "2019 - 2022", "Jun 2020 - Jul 2022"
-        date_range_pattern = r'(?i)\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*(\d{4})\s*[-–—to]+\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*(\d{4}|Present|Current)\b'
+        date_range_pattern = r'(?i)\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*(\d{4})\s*[-\u2013\u2014to]+\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*(\d{4}|Present|Current)\b'
         
         matches = re.findall(date_range_pattern, exp_section)
         total_months = 0

@@ -1,6 +1,6 @@
-﻿# 📄 AI Resume Parser & Intelligent Candidate Search Engine
+﻿# AI Resume Parser & Intelligent Candidate Search Engine
 
-> An automated, AI-powered resume parsing and candidate ranking system built with Python, Flask, and Scikit-Learn — deployable on Vercel.
+An automated, AI-powered resume parsing and candidate ranking system built with Python, Flask, and Scikit-Learn, deployable on Vercel.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)
@@ -10,56 +10,56 @@
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
-| 📥 **PDF Parsing** | Extracts structured data from PDF resumes using PyMuPDF (with pypdf fallback) |
-| 🧠 **Skills Extraction** | Matches 100+ skills against a canonical taxonomy (Python, AWS, React, Docker, etc.) |
-| 📊 **Intelligent Ranking** | Hybrid TF-IDF + rule-based suitability scoring (skill, experience, education, semantic) |
-| 🔍 **Natural Language Search** | Query in plain English: *"Senior Python developer with 5+ years and AWS experience"* |
-| 🎯 **Faceted Filtering** | Filter by minimum experience (years), education level, and required skills |
-| 📤 **Resume Upload** | Drag-and-drop upload for new PDF resumes with live re-indexing |
-| 📋 **Contact Extraction** | Extracts email, phone, LinkedIn, GitHub, and location automatically |
-| 🎓 **Education Detection** | Identifies PhD, Master's, Bachelor's, and Associate's degrees |
-| 📅 **Experience Calculation** | Computes total years from date ranges in work history sections |
-| 🌐 **Web UI** | Clean, responsive HTML/Tailwind CSS frontend + a Streamlit dashboard |
+| **PDF Parsing** | Extracts structured data from PDF resumes using PyMuPDF (with pypdf fallback) |
+| **Skills Extraction** | Matches 100+ skills against a canonical taxonomy (Python, AWS, React, Docker, etc.) |
+| **Intelligent Ranking** | Hybrid TF-IDF + rule-based suitability scoring (skill, experience, education, semantic) |
+| **Natural Language Search** | Query in plain English: "Senior Python developer with 5+ years and AWS experience" |
+| **Faceted Filtering** | Filter by minimum experience (years), education level, and required skills |
+| **Resume Upload** | Drag-and-drop upload for new PDF resumes with live re-indexing |
+| **Contact Extraction** | Extracts email, phone, LinkedIn, GitHub, and location automatically |
+| **Education Detection** | Identifies PhD, Master's, Bachelor's, and Associate's degrees |
+| **Experience Calculation** | Computes total years from date ranges in work history sections |
+| **Web UI** | Clean, responsive HTML/Tailwind CSS frontend with FontAwesome icons |
 
 ---
 
-## 🏗️ Project Architecture
+## Project Architecture
 
 ```
 RESUME_PARSER/
-│
-├── api/
-│   └── index.py              # Flask app — Vercel serverless entry point
-│
-├── src/
-│   ├── parser.py             # Core PDF parsing & information extraction engine
-│   ├── search_engine.py      # Hybrid TF-IDF + rule-based search & ranking engine
-│   ├── generator.py          # Sample resume PDF generator (ReportLab)
-│   └── utils.py              # Skills taxonomy, regex patterns, helper functions
-│
-├── templates/
-│   └── index.html            # Responsive Tailwind CSS web interface
-│
-├── data/
-│   └── resumes/              # 10 pre-generated sample PDF resumes
-│
-├── tests/
-│   └── test_system.py        # Unit tests for parsing, search, and ranking
-│
-├── app.py                    # Streamlit interactive dashboard (local use)
-├── demo.py                   # Quick CLI demo script
-├── requirements.txt          # Python dependencies
-├── vercel.json               # Vercel deployment configuration
-└── README.md
+|
+|-- api/
+|   `-- index.py              # Flask app -- Vercel serverless entry point
+|
+|-- src/
+|   |-- parser.py             # Core PDF parsing & information extraction engine
+|   |-- search_engine.py      # Hybrid TF-IDF + rule-based search & ranking engine
+|   |-- generator.py          # Sample resume PDF generator (ReportLab)
+|   `-- utils.py              # Skills taxonomy, regex patterns, helper functions
+|
+|-- templates/
+|   `-- index.html            # Responsive Tailwind CSS web interface
+|
+|-- data/
+|   `-- resumes/              # 10 pre-generated sample PDF resumes
+|
+|-- tests/
+|   `-- test_system.py        # Unit tests for parsing, search, and ranking
+|
+|-- app.py                    # Streamlit interactive dashboard (local use)
+|-- demo.py                   # Quick CLI demo script
+|-- requirements.txt          # Python dependencies
+|-- vercel.json               # Vercel deployment configuration
+`-- README.md
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -106,9 +106,9 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ---
 
-## 🌐 Deployment on Vercel
+## Deployment on Vercel
 
-This project is configured for **Vercel Serverless** deployment.
+This project is configured for Vercel Serverless deployment.
 
 ### Deploy via Vercel CLI
 
@@ -120,7 +120,7 @@ vercel --prod
 ### Deploy via GitHub Integration
 
 1. Push this repository to GitHub.
-2. Go to [vercel.com](https://vercel.com) → **New Project** → Import from GitHub.
+2. Go to [vercel.com](https://vercel.com) > New Project > Import from GitHub.
 3. Select `anjanatn/Resume-Parser`.
 4. Vercel auto-detects `vercel.json` and deploys automatically.
 
@@ -137,7 +137,7 @@ The `vercel.json` routes all requests to `api/index.py`:
 
 ---
 
-## 🔌 REST API Endpoints
+## REST API Endpoints
 
 ### `GET /`
 Renders the main web UI with the current count of indexed resumes.
@@ -194,35 +194,35 @@ Returns all indexed candidate profiles.
 
 ---
 
-## 🧮 Suitability Scoring Model
+## Suitability Scoring Model
 
 | Component | Weight | Description |
 |---|---|---|
-| **Skill Match** | 40% | Fraction of required skills found in candidate profile |
-| **Experience Match** | 30% | Years of experience vs. required minimum |
-| **Semantic Relevance** | 20% | TF-IDF cosine similarity between query and resume text |
-| **Education Level** | 10% | Degree level vs. required minimum |
+| Skill Match | 40% | Fraction of required skills found in candidate profile |
+| Experience Match | 30% | Years of experience vs. required minimum |
+| Semantic Relevance | 20% | TF-IDF cosine similarity between query and resume text |
+| Education Level | 10% | Degree level vs. required minimum |
 
 ```
-score = (skill_match × 0.40) + (exp_match × 0.30) + (tfidf_similarity × 0.20) + (edu_match × 0.10)
+score = (skill_match * 0.40) + (exp_match * 0.30) + (tfidf_similarity * 0.20) + (edu_match * 0.10)
 ```
 
 ---
 
-## 🛠️ Skills Taxonomy (100+ skills)
+## Skills Taxonomy (100+ skills)
 
 - **Languages:** Python, Java, JavaScript, TypeScript, C++, Go, Swift, Kotlin, Rust, SQL, Dart, Bash
 - **Frontend:** React, Next.js, Vue.js, Angular, HTML5, CSS3, Tailwind CSS, Redux, Sass
 - **Backend:** FastAPI, Django, Flask, Spring Boot, Express.js, Node.js, GraphQL, REST APIs, Microservices
-- **AI/ML:** PyTorch, TensorFlow, Scikit-Learn, Pandas, NumPy, HuggingFace, NLP, LLMs
-- **Cloud/DevOps:** AWS, Azure, GCP, Docker, Kubernetes, Terraform, Ansible, Jenkins, CI/CD
+- **AI / ML:** PyTorch, TensorFlow, Scikit-Learn, Pandas, NumPy, HuggingFace, NLP, LLMs
+- **Cloud / DevOps:** AWS, Azure, GCP, Docker, Kubernetes, Terraform, Ansible, Jenkins, CI/CD
 - **Databases:** PostgreSQL, MySQL, MongoDB, Oracle DB, Redis, SQLite
 - **Security:** Cybersecurity, Wireshark, SIEM, Penetration Testing, OWASP
 - **Tools:** Git, Figma, Flutter, Firebase, JIRA, Tableau, PowerBI, Prometheus, Grafana
 
 ---
 
-## 📁 Sample Resumes Included
+## Sample Resumes Included
 
 | # | Candidate | Role |
 |---|---|---|
@@ -239,7 +239,7 @@ score = (skill_match × 0.40) + (exp_match × 0.30) + (tfidf_similarity × 0.20)
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
 python -m unittest tests/test_system.py -v
@@ -249,7 +249,7 @@ All 5 tests cover: parsing accuracy, field extraction, Python search ranking, De
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ```
 Flask>=3.0.0
@@ -259,14 +259,14 @@ pypdf>=3.17.0
 scikit-learn>=1.3.0
 ```
 
-> **Note:** `streamlit` and `pandas` are needed only for `app.py` (Streamlit UI), not for Flask/Vercel deployment.
+Note: `streamlit` and `pandas` are needed only for `app.py` (Streamlit UI), not for Flask/Vercel deployment.
 
 ---
 
-## 📝 License
+## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License -- see [LICENSE](LICENSE) for details.
 
 ---
 
-*Built with ❤️ using Python, Flask, PyMuPDF, Scikit-Learn, and ReportLab.*
+Built with Python, Flask, PyMuPDF, Scikit-Learn, and ReportLab.
