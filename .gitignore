@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .vercel
 .env
+
+# Private resumes - do not commit to public repo
+ResumeParserUnlocked/

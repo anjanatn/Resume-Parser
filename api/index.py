@@ -17,12 +17,24 @@ resumes_dir = os.path.join(BASE_DIR, "data", "resumes")
 
 def load_initial_candidates():
     candidates = []
+    # Load synthetic resumes from data/resumes/
     if os.path.exists(resumes_dir):
         for fname in sorted(os.listdir(resumes_dir)):
             if fname.lower().endswith((".pdf", ".docx", ".txt")):
                 fpath = os.path.join(resumes_dir, fname)
                 parsed = parser.parse(fpath, filename=fname)
                 candidates.append(parsed)
+    # Load real resumes from ResumeParserUnlocked/ (skip macOS metadata files)
+    unlock_dir = os.path.join(BASE_DIR, "ResumeParserUnlocked")
+    if os.path.exists(unlock_dir):
+        for fname in sorted(os.listdir(unlock_dir)):
+            if fname.lower().endswith((".pdf", ".docx", ".txt")) and not fname.startswith("._"):
+                fpath = os.path.join(unlock_dir, fname)
+                try:
+                    parsed = parser.parse(fpath, filename=fname)
+                    candidates.append(parsed)
+                except Exception as e:
+                    print(f"[WARN] Could not parse {fname}: {e}")
     return candidates
 
 candidates_db = load_initial_candidates()
